@@ -17,8 +17,23 @@ class CustomUserCreateSerializer(ModelSerializer):
         user.save()
         return user
         
-        
+# serialzer for admin
 class CustomUserSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
         fields = '__all__'
+        
+class CustomUserSerializerForViewer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "username", "first_name", "last_name", "email", "is_active", "date_joined", "designation", "address", "phone", "current_site", "user_type"]
+
+class CustomUserSerializerForMainManager(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "username", "first_name", "last_name", "email", "is_active", "date_joined", "designation", "address", "phone", "current_site"]
+
+class CustomUserSerializerForSiteManager(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "username", "first_name", "last_name", "email", "designation", "address", "phone"]

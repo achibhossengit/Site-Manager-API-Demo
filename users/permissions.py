@@ -7,13 +7,18 @@ class DenyAll(BasePermission):
     def has_object_permission(self, request, view, obj):
         return False
 
-class IsAdminOrMainManager(BasePermission):
+class IsAdminMainManagerOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-
+        
         # Get user_type safely using getattr
         user_type = getattr(user, 'user_type', None)
-        return user.is_staff or user_type == 'main_manager'
+
+        if user.is_staff or user.user_type == 'main_manager':
+            return True
+        
+        return request.method in SAFE_METHODS
+
 
 class IsAdminMainManagerOrSiteManager(BasePermission):
     def has_permission(self, request, view):
