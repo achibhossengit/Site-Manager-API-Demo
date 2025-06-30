@@ -28,6 +28,7 @@ class SiteCost(models.Model):
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     update_permission = models.BooleanField(default=False)
+    delete_permission = models.BooleanField(default=False)
     
     def __str__(self):
         return self.title
@@ -40,6 +41,7 @@ class SiteCash(models.Model):
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     update_permission = models.BooleanField(default=False)
+    delete_permission = models.BooleanField(default=False)
 
     
     def __str__(self):
@@ -53,6 +55,7 @@ class SiteBill(models.Model):
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     update_permission = models.BooleanField(default=False)
+    delete_permission = models.BooleanField(default=False)
     
     def __str__(self):
         return self.title

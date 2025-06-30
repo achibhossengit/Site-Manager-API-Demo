@@ -22,6 +22,7 @@ class DailyRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     update_permission = models.BooleanField(default=False)
+    delete_permission = models.BooleanField(default=False)
 
     
     class Meta:
