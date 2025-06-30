@@ -14,7 +14,7 @@ class IsAdminMainManagerOrReadOnly(BasePermission):
         # Get user_type safely using getattr
         user_type = getattr(user, 'user_type', None)
 
-        if user.is_staff or user.user_type == 'main_manager':
+        if user.is_staff or user_type == 'main_manager':
             return True
         
         return request.method in SAFE_METHODS
