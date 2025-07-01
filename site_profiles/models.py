@@ -2,6 +2,12 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
 
+PERMISSION_CHOICES = [
+    (0, 'No Permission'),
+    (1, 'Update Only'),
+    (2, 'Delete Only'),
+]
+
 class Site(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=500)
@@ -27,9 +33,8 @@ class SiteCost(models.Model):
     title = models.CharField(max_length=300)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
-    delete_permission = models.BooleanField(default=False)
-    
+    permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
+
     def __str__(self):
         return self.title
     
@@ -40,8 +45,8 @@ class SiteCash(models.Model):
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
-    delete_permission = models.BooleanField(default=False)
+    permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
+
 
     
     def __str__(self):
@@ -54,8 +59,8 @@ class SiteBill(models.Model):
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
-    delete_permission = models.BooleanField(default=False)
+    permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
+
     
     def __str__(self):
         return self.title

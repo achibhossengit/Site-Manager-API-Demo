@@ -3,13 +3,14 @@ from users.models import CustomUser
 from site_profiles.models import Site
 from datetime import date
 from django.core.validators import MaxValueValidator
+from site_profiles.models import PERMISSION_CHOICES
 
 
 class DailyRecord(models.Model):
     PRESENT_CHOICES = [
-    (0.0, 'Absent'),
-    (0.5, 'Half Day'),
-    (1.0, 'Full Day'),
+        (0.0, 'Absent'),
+        (0.5, 'Half Day'),
+        (1.0, 'Full Day'),
     ]
     
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
@@ -21,8 +22,8 @@ class DailyRecord(models.Model):
     comment = models.CharField(max_length=150, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
-    delete_permission = models.BooleanField(default=False)
+    permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
+
 
     
     class Meta:
