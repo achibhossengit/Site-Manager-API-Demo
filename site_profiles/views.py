@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from site_profiles.models import Site, SiteCost
-from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer
+from site_profiles.models import Site, SiteCost, SiteCash
+from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer
 from users.permissions import IsAdminMainManagerOrReadOnly
 from site_profiles.permissions import IsAdminOrConditionalPermission
 
@@ -52,3 +52,40 @@ class SiteCostViewSet(ModelViewSet):
         if user.user_type == 'site_manager':
             return SiteCost.objects.filter(site=user.current_site)
         return SiteCost.objects.none()
+        
+        
+        
+class SiteCashViewSet(ModelViewSet):
+    """
+    Permissions (via IsAdminOrConditionalPermission + IsAuthenticated):
+        - Admin (is_staff):
+            * LIST, RETRIEVE any SiteCash
+            * UPDATE or DELETE any SiteCash
+            * CREATE any SiteCash
+        - Main Manager:
+            * LIST, RETRIEVE all SiteCash
+            * UPDATE (PUT) only when permission_level == 1
+            * DELETE when permission_level == 2
+            * No CREATE permission
+        - Viewer:
+            * LIST and RETRIEVE only (read‑only)
+        - Site Manager:
+            * LIST and RETRIEVE SiteCash for own site
+            * CREATE (POST) new SiteCash for own site
+            * PARTIAL UPDATE (PATCH) of permission_level on own site records
+    """
+    
+    permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'PATCH':
+            return SiteCashUpdatePermissionSerializer
+        return SiteCashSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.user_type in ['main_manager', 'viewer']:
+            return SiteCash.objects.all()
+        if user.user_type == 'site_manager':
+            return SiteCash.objects.filter(site=user.current_site)
+        return SiteCash.objects.none()
