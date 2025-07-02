@@ -55,3 +55,15 @@ class IsAdminOrConditionalPermission(BasePermission):
             return obj.site == user.current_site and request.method in ['GET', 'POST', 'PATCH']
             
         return False
+    
+    
+class IsAdminMainManagerOrViewerReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if user.is_staff or user.user_type == 'main_manager':
+            return True
+                
+        if user.user_type == 'viewer':
+            return request.method in SAFE_METHODS
+
+        return False

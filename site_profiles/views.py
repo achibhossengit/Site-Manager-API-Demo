@@ -1,9 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from site_profiles.models import Site, SiteCost, SiteCash
-from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer
+from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
+from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
 from users.permissions import IsAdminMainManagerOrReadOnly
-from site_profiles.permissions import IsAdminOrConditionalPermission
+from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly
 
 class SiteViewSet(ModelViewSet):
     """
@@ -89,3 +89,9 @@ class SiteCashViewSet(ModelViewSet):
         if user.user_type == 'site_manager':
             return SiteCash.objects.filter(site=user.current_site)
         return SiteCash.objects.none()
+    
+    
+class SiteBillViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated, IsAdminMainManagerOrViewerReadOnly]
+    serializer_class = SiteBillSerializer
+    queryset = SiteBill.objects.all()
