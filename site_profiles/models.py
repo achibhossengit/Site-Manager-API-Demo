@@ -60,7 +60,6 @@ class SiteBill(models.Model):
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
-    permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
 
     
     def __str__(self):
