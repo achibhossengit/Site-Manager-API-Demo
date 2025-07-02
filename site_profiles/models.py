@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
+from site_profiles.validators import validate_today_or_yesterday, validate_not_future_date
 
 PERMISSION_CHOICES = [
     (0, 'No Permission'),
@@ -29,7 +30,7 @@ class Site(models.Model):
     
 class SiteCost(models.Model):
     site = models.ForeignKey(Site, related_name='site_costs', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
     title = models.CharField(max_length=300)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,7 +42,7 @@ class SiteCost(models.Model):
 
 class SiteCash(models.Model):
     site = models.ForeignKey(Site, related_name='site_cashes', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
@@ -55,7 +56,7 @@ class SiteCash(models.Model):
     
 class SiteBill(models.Model):
     site = models.ForeignKey(Site, related_name='site_bills', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=date.today, validators=[validate_not_future_date])
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)

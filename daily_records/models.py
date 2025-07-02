@@ -4,6 +4,7 @@ from site_profiles.models import Site
 from datetime import date
 from django.core.validators import MaxValueValidator
 from site_profiles.models import PERMISSION_CHOICES
+from site_profiles.validators import validate_today_or_yesterday
 
 
 class DailyRecord(models.Model):
@@ -15,7 +16,7 @@ class DailyRecord(models.Model):
     
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
     present = models.FloatField(choices=PRESENT_CHOICES, default=0.0)
     khoraki = models.PositiveIntegerField(validators=[MaxValueValidator(1000)])
     advance = models.PositiveIntegerField(blank=True, null=True)
