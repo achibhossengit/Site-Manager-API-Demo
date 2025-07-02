@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from users.views import EmployeeViewSet
-from site_profiles.views import SiteViewSet
+from site_profiles.views import SiteViewSet, SiteCostViewSet
 
 router = DefaultRouter()
 router.register('employees', EmployeeViewSet, basename='employees')
 router.register('sites', SiteViewSet, basename='sites')
+router.register('site-costs', SiteCostViewSet, basename='site-costs')
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
