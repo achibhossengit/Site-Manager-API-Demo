@@ -8,10 +8,16 @@ from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMai
 class SiteViewSet(ModelViewSet):
     """
     Permissions:
-        - **Admins and Main Managers:** Can create, retrieve, update, and delete site data.
-        - **Other authenticated users:** Can view site data (GET only).
-        - **Anonymous users:** Can view site data (GET only). **This will help to show site profile in homepage**
-
+        - Admins and Main Managers:
+            → Can create, retrieve, update, and delete site data.
+        - Authenticated Users (other roles):
+            → Can only retrieve (GET) site data.
+        - Anonymous Users:
+            → Can also retrieve (GET) site data.
+            → Useful for displaying site profiles on public homepages.
+    Notes:
+        - All users (authenticated or not) can view site data.
+        - Only Admins and Main Managers have full modification rights.
     """
     serializer_class = SiteSerializer
     permission_classes = [IsAuthenticated, IsAdminMainManagerOrReadOnly]
@@ -20,22 +26,23 @@ class SiteViewSet(ModelViewSet):
     
 class SiteCostViewSet(ModelViewSet):
     """
-    Permissions (via IsAdminOrConditionalPermission + IsAuthenticated):
+    Permissions:
         - Admin (is_staff):
-            * LIST, RETRIEVE any SiteCost
-            * UPDATE or DELETE any SiteCost
-            * CREATE any SiteCost
+            → Can list, retrieve, create, update, and delete any SiteCost.
         - Main Manager:
-            * LIST, RETRIEVE all SiteCost
-            * UPDATE (PUT) only when permission_level == 1
-            * DELETE when permission_level == 2
-            * No CREATE permission
+            → Can list and retrieve all SiteCost.
+            → Can update (PUT) only if `permission_level == 1`.
+            → Can delete only if `permission_level == 2`.
+            → Cannot create SiteCost.
         - Viewer:
-            * LIST and RETRIEVE only (read‑only)
+            → Can only list and retrieve (read-only access).
         - Site Manager:
-            * LIST and RETRIEVE SiteCost for own site
-            * CREATE (POST) new SiteCost for own site
-            * PARTIAL UPDATE (PATCH) of permission_level on own site records
+            → Can list and retrieve SiteCost records for their assigned site.
+            → Can create (POST) new SiteCost for their own site.
+            → Can partially update (PATCH) the `permission_level` of their own site records.
+    Notes:
+        - All actions require authenticated users.
+        - Other user types are denied access.
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
@@ -57,22 +64,23 @@ class SiteCostViewSet(ModelViewSet):
         
 class SiteCashViewSet(ModelViewSet):
     """
-    Permissions (via IsAdminOrConditionalPermission + IsAuthenticated):
+    Permissions:
         - Admin (is_staff):
-            * LIST, RETRIEVE any SiteCash
-            * UPDATE or DELETE any SiteCash
-            * CREATE any SiteCash
+            → Can list, retrieve, create, update, and delete any SiteCash.
         - Main Manager:
-            * LIST, RETRIEVE all SiteCash
-            * UPDATE (PUT) only when permission_level == 1
-            * DELETE when permission_level == 2
-            * No CREATE permission
+            → Can list and retrieve all SiteCash.
+            → Can update (PUT) only if `permission_level == 1`.
+            → Can delete only if `permission_level == 2`.
+            → Cannot create SiteCash.
         - Viewer:
-            * LIST and RETRIEVE only (read‑only)
+            → Can only list and retrieve (read-only access).
         - Site Manager:
-            * LIST and RETRIEVE SiteCash for own site
-            * CREATE (POST) new SiteCash for own site
-            * PARTIAL UPDATE (PATCH) of permission_level on own site records
+            → Can list and retrieve SiteCash belonging to their own site.
+            → Can create (POST) new SiteCash for their own site.
+            → Can partially update (PATCH) `permission_level` for their own site's records.
+    Notes:
+        - All users must be authenticated.
+        - Other user types are denied access.
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
@@ -92,6 +100,12 @@ class SiteCashViewSet(ModelViewSet):
     
     
 class SiteBillViewSet(ModelViewSet):
+    """
+    Permissions:
+        - Admin → can get, create, update, delete.
+        - Main Manager → can get, create, update, delete.
+        - Viewer → can only view (
+    """
     permission_classes = [IsAuthenticated, IsAdminMainManagerOrViewerReadOnly]
     serializer_class = SiteBillSerializer
     queryset = SiteBill.objects.all()
