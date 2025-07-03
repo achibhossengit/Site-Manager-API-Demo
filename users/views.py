@@ -36,8 +36,7 @@ class EmployeeViewSet(ModelViewSet):
             return CustomUser.objects.filter(is_staff = False, current_site = self.request.user.current_site)
         
         # employee can access their won profile djoser endpoint ('auth/users/me')
-        
-        return None
+        return CustomUser.objects.none()
         
     def get_serializer_class(self):
         if self.request.user.is_staff:
@@ -48,10 +47,9 @@ class EmployeeViewSet(ModelViewSet):
 
         if self.request.user.user_type == 'main_manager':
             return CustomUserSerializerForMainManager
-
-        if self.request.user.user_type == 'site_manager':
-            return CustomUserSerializerForSiteManager
         
+        return CustomUserSerializerForSiteManager
+                
     def partial_update(self, request, *args, **kwargs):
         if not (self.request.user.is_staff or self.request.user.user_type == 'viewer'):
             raise PermissionDenied("Only Admins and viewers are allowed to update user_type.")
