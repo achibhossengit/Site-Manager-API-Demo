@@ -46,6 +46,7 @@ class SiteCostViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
+    filterset_fields = ['site']
     
     def get_serializer_class(self):
         if self.request.method == 'PATCH':
@@ -84,6 +85,7 @@ class SiteCashViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
+    filterset_fields = ['site']
     
     def get_serializer_class(self):
         if self.request.method == 'PATCH':
@@ -109,3 +111,4 @@ class SiteBillViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminMainManagerOrViewerReadOnly]
     serializer_class = SiteBillSerializer
     queryset = SiteBill.objects.all()
+    filterset_fields = ['site']

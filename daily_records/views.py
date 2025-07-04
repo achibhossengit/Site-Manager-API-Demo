@@ -27,6 +27,7 @@ class DailyRecordViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermissionForDailyRecord]
+    filterset_fields = ['site', 'employee']
     
     def get_serializer_class(self):
         if self.request.method == 'POST':

@@ -23,6 +23,8 @@ class EmployeeViewSet(ModelViewSet):
         
     """
     permission_classes = [IsAuthenticated, IsAdminMainManagerOrReadOnly]
+    filterset_fields = ['current_site', 'designation']
+    
     def get_queryset(self):
         if self.request.user.is_staff:
             return CustomUser.objects.all()
