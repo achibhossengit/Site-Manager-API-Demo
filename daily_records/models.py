@@ -35,3 +35,46 @@ class DailyRecord(models.Model):
     def __str__(self):
         return f"{self.employee} - {self.date}"
 
+
+class WorkSession(models.Model):
+    employee = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='work_sessions'
+    )
+    start_date = models.DateField()  # first daily record date
+    end_date = models.DateField()    # last daily record date
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True) # only can update is_paid filed -> "mistake" not intentionally
+    
+    is_paid = models.BooleanField(default=False)
+    
+    @property
+    def total_payable(self):
+        total = 0
+        for record in self.records.all():
+            total += record.payable
+        return total
+
+    def __str__(self):
+        return f"{self.employee.username} | {self.start_date} - {self.end_date}"
+        
+
+class SiteWorkRecord(models.Model):
+    work_session = models.ForeignKey(
+        WorkSession,
+        on_delete=models.CASCADE,
+        related_name='records'
+    )
+    site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE)
+    work = models.PositiveIntegerField()
+    total_salary = models.PositiveIntegerField()
+    khoraki_taken = models.PositiveIntegerField()
+    advance_taken = models.PositiveIntegerField()
+    
+    @property
+    def payable(self):
+        return self.total_salary - (self.khoraki_taken + self.advance_taken)
+
+    def __str__(self):
+        return f"Site: {self.site} | Work: {self.work} days"
