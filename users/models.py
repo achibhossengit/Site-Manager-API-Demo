@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator
 from django.db.models import Sum
+from api.services.get_salary import get_salary
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = [
@@ -49,16 +50,10 @@ class CustomUser(AbstractUser):
     @property
     def total_salary(self):
         promotions = list(Promotion.objects.filter(employee=self).order_by('date'))
-        def get_salary_rate( work_date):
-            for promo in reversed(promotions):
-                if promo.date <= work_date:
-                    return promo.current_salary
-            return 0
 
         total = 0
-
         for record in self.daily_records.all():
-            rate = get_salary_rate(record.date)
+            rate = get_salary(promotions, record.date)
             total += rate * record.present
         return total
     
