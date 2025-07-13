@@ -66,7 +66,7 @@ class SiteWorkRecord(models.Model):
         on_delete=models.CASCADE,
         related_name='records'
     )
-    site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE)
+    site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE, related_name='work_records')
     work = models.PositiveIntegerField()
     total_salary = models.PositiveIntegerField()
     khoraki_taken = models.PositiveIntegerField()
