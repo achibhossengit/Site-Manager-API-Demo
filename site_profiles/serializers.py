@@ -1,7 +1,14 @@
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
 
 class SiteSerializer(ModelSerializer):
+    total_site_bill = serializers.IntegerField(read_only=True)
+    total_site_cash = serializers.IntegerField(read_only=True)
+    total_site_cost = serializers.IntegerField(read_only=True)
+    total_employee_taken = serializers.FloatField(read_only=True)
+    total_employee_cost = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Site
         fields = '__all__'
@@ -50,13 +57,6 @@ class SiteCashUpdatePermissionSerializer(ModelSerializer):
     class Meta:
         model = SiteCash
         fields = ['permission_level']
-        
-
-# site cash serializer
-class SiteCashSerializer(ModelSerializer):
-    class Meta:
-        model = SiteCash
-        fields = '__all__'
         
 
 # site Bills serializer

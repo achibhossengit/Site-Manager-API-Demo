@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
+from django.db.models import Sum
 from site_profiles.validators import validate_today_or_yesterday, validate_not_future_date
 
 PERMISSION_CHOICES = [
@@ -15,6 +16,31 @@ class Site(models.Model):
     location = models.CharField(max_length=100)
     start_at = models.DateField(default=date.today)
     handover = models.DateField(null=True, blank=True)
+
+    @property
+    def total_site_bill(self):
+        result = self.site_bills.aggregate(total=Sum('amount'))
+        return result['total'] or 0
+
+    @property
+    def total_site_cash(self):
+        result = self.site_cashes.aggregate(total=Sum('amount'))
+        return result['total'] or 0
+
+    @property
+    def total_site_cost(self):
+        result = self.site_costs.aggregate(total=Sum('amount'))
+        return result['total'] or 0
+
+    @property
+    def total_employee_taken(self):
+        result = self.work_records.aggregate(total=Sum('work'))
+        return result['total'] or 0
+        
+    @property
+    def total_employee_cost(self):
+        result = self.work_records.aggregate(total=Sum('total_salary'))
+        return result['total'] or 0
 
     def clean(self):
         if self.handover and self.handover <= self.start_at:
