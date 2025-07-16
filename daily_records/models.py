@@ -5,6 +5,7 @@ from datetime import date
 from django.core.validators import MaxValueValidator
 from site_profiles.models import PERMISSION_CHOICES
 from site_profiles.validators import validate_today_or_yesterday
+from api.services.get_salary_by_employee import get_salary_by_employee
 
 
 class DailyRecord(models.Model):
@@ -26,6 +27,9 @@ class DailyRecord(models.Model):
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
 
 
+    @property
+    def today_salary(self):
+        return get_salary_by_employee(self.employee, self.date)
     
     class Meta:
         constraints = [
