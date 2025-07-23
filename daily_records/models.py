@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 from users.models import CustomUser
 from site_profiles.models import Site
 from datetime import date
@@ -46,19 +47,23 @@ class WorkSession(models.Model):
         on_delete=models.CASCADE,
         related_name='work_sessions'
     )
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='created_worksession') # which site create it
     start_date = models.DateField()  # first daily record date
     end_date = models.DateField()    # last daily record date
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True) # only can update is_paid filed -> "mistake" not intentionally
+    updated_at = models.DateTimeField(auto_now=True)
     
     is_paid = models.BooleanField(default=False)
+    update_permission = models.BooleanField(default=False)
+    extra_taken = models.PositiveIntegerField(default=0) # extra taken during session creation time
+    total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    current_payable = models.IntegerField()
+    last_session_payable = models.IntegerField(default=0)
     
     @property
     def total_payable(self):
-        total = 0
-        for record in self.records.all():
-            total += record.payable
-        return total
+        return self.current_payable + self.last_session_payable + self.extra_taken
+
 
     def __str__(self):
         return f"{self.employee.username} | {self.start_date} - {self.end_date}"
