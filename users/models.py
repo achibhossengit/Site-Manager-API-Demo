@@ -64,8 +64,10 @@ class CustomUser(AbstractUser):
 class Promotion(models.Model):
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='promotions')
     date = models.DateField()
-    increment = models.IntegerField()
     current_salary = models.PositiveIntegerField(validators=[MaxValueValidator(5000)])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     
     class Meta:
         constraints = [

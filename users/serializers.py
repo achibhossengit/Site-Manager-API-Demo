@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models import CustomUser
+from users.models import CustomUser, Promotion
 
 class CustomUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,3 +77,9 @@ class CustomUserSerializerForSiteManager(serializers.ModelSerializer):
             'total_khoraki', 'total_advance', 'total_presents',
             'last_session_payable', 'total_salary'
         ]
+
+
+class PromotionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Promotion
+        fields = '__all__'

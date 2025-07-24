@@ -3,9 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import status
-from users.models import CustomUser
-from users.serializers import CustomUserSerializer, CustomUserSerializerForMainManager, CustomUserSerializerForViewer, CustomUserSerializerForSiteManager
-from users.permissions import IsAdminMainManagerOrReadOnly
+from users.models import CustomUser, Promotion
+from users.serializers import CustomUserSerializer, CustomUserSerializerForMainManager, CustomUserSerializerForViewer, CustomUserSerializerForSiteManager, PromotionSerializer
+from users.permissions import IsAdminMainManagerOrReadOnly, PromotionPermission
 
 class EmployeeViewSet(ModelViewSet):
     """
@@ -72,3 +72,27 @@ class EmployeeViewSet(ModelViewSet):
 
         # Perform the update
         return super().partial_update(request, *args, **kwargs)
+    
+    
+    
+class PromotionViewSet(ModelViewSet):
+    serializer_class = PromotionSerializer
+    permission_classes = [IsAuthenticated, PromotionPermission]
+    
+    def get_queryset(self):
+        user = self.request.user
+        emp_id = self.kwargs.get('employee_pk')
+
+        queryset = Promotion.objects.filter(employee_id=emp_id)
+
+        if user.user_type in ['main_manager', 'viewer']:
+            return queryset
+
+        elif user.user_type == 'site_manager':
+            return queryset.filter(employee__current_site=user.current_site)
+
+        elif user.user_type == 'employee':
+            return queryset.filter(employee=user)
+
+        return Promotion.objects.none()
+    
