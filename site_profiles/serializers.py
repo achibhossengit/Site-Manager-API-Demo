@@ -4,10 +4,13 @@ from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
 
 class SiteSerializer(ModelSerializer):
     total_site_bill = serializers.IntegerField(read_only=True)
-    total_site_cash = serializers.IntegerField(read_only=True)
     total_site_cost = serializers.IntegerField(read_only=True)
-    total_employee_taken = serializers.FloatField(read_only=True)
-    total_employee_cost = serializers.IntegerField(read_only=True)
+    total_rose_taken = serializers.FloatField(read_only=True)
+    actual_employee_cost = serializers.IntegerField(read_only=True)
+    profit = serializers.IntegerField(read_only=True)
+    total_site_cash = serializers.IntegerField(read_only=True)
+    taken_employee_cost = serializers.IntegerField(read_only=True)
+    site_balance = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Site
@@ -46,6 +49,8 @@ class SiteCashSerializer(ModelSerializer):
         
     def create(self, validated_data):
         request = self.context.get('request')
+        if not hasattr(request.user, 'current_site'):
+            raise serializers.ValidationError("User has no current_site assigned.")
         validated_data['site'] = request.user.current_site
         return super().create(validated_data)
     

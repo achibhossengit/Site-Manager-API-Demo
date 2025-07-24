@@ -1,8 +1,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
-from django.db.models import Sum
+from django.db.models import Sum, F
 from site_profiles.validators import validate_today_or_yesterday, validate_not_future_date
+from users.models import Promotion
+from api.services.get_salary import get_salary
 
 PERMISSION_CHOICES = [
     (0, 'No Permission'),
@@ -16,31 +18,88 @@ class Site(models.Model):
     location = models.CharField(max_length=100)
     start_at = models.DateField(default=date.today)
     handover = models.DateField(null=True, blank=True)
+    
+    def get_current_actual_emp_cost(self):
+        daily_records = self.daily_records.select_related('employee')
+        # Step 1: Get unique employee list from records
+        employee_ids = set(daily_records.values_list('employee_id', flat=True))
+        # Step 2: Preload promotions grouped by employee_id
+        promotions_by_employee = {
+            emp_id: list(Promotion.objects.filter(employee_id=emp_id).order_by('-date'))
+            for emp_id in employee_ids
+        }
+        current = 0
+        for record in daily_records:
+            emp_id = record.employee_id
+            promotions = promotions_by_employee.get(emp_id, [])
+            today_salary = get_salary(promotions, record.date)
+            current += today_salary * record.present
+        return current
+    
+    def get_previous_actual_emp_cost(self):
+        previous = self.work_records.aggregate(total=Sum('total_salary'))
+        return previous.get('total') or 0
+        
+    
+    def get_current_emp_taken_cost(self):
+        current_taken_cost = self.daily_records.annotate(total = F('khoraki') + F('advance')).aggregate(total_taken=Sum('total'))
+        return current_taken_cost.get('total_taken') or 0
+
+    def get_previous_emp_taken_cost(self):
+        from_workrecords = self.work_records.aggregate(total=Sum('total_salary'))
+        from_worksessions = self.created_worksessions.annotate(
+            total_payable=F('current_payable') + F('last_session_payable') + F('extra_taken')).filter(
+                is_paid=True,total_payable__gt=0).aggregate(total=Sum('total_payable'))
+
+        result = (from_workrecords.get('total') or 0) + (from_worksessions.get('total') or 0)
+        return result
+        
 
     @property
     def total_site_bill(self):
         result = self.site_bills.aggregate(total=Sum('amount'))
-        return result['total'] or 0
+        return result.get('total') or 0
 
     @property
-    def total_site_cash(self):
-        result = self.site_cashes.aggregate(total=Sum('amount'))
-        return result['total'] or 0
+    def total_rose_taken(self):
+        previous = self.work_records.aggregate(total=Sum('work'))
+        current = self.daily_records.aggregate(total=Sum('present'))
+        result = (previous.get('total') or 0) + (current.get('total') or 0)
+        return result
+    
+    @property
+    def actual_employee_cost(self):
+        previous_emp_cost = self.get_previous_actual_emp_cost()
+        current_emp_cost = self.get_current_actual_emp_cost()
+        result = previous_emp_cost + current_emp_cost
+        return result
 
     @property
     def total_site_cost(self):
         result = self.site_costs.aggregate(total=Sum('amount'))
-        return result['total'] or 0
+        return result.get('total') or 0
+    
+    @property
+    def profit(self):
+        result = self.total_site_bill - (self.total_site_cost + self.actual_employee_cost)
+        return result
 
     @property
-    def total_employee_taken(self):
-        result = self.work_records.aggregate(total=Sum('work'))
-        return result['total'] or 0
-        
+    def total_site_cash(self):
+        result = self.site_cashes.aggregate(total=Sum('amount'))
+        return result.get('total') or 0
+    
     @property
-    def total_employee_cost(self):
-        result = self.work_records.aggregate(total=Sum('total_salary'))
-        return result['total'] or 0
+    def taken_employee_cost(self):
+        previous_taken_cost = self.get_previous_emp_taken_cost()
+        current_taken_cost = self.get_current_emp_taken_cost()
+        return previous_taken_cost + current_taken_cost
+    
+    @property
+    def site_balance(self):
+        result = self.total_site_cash - (self.total_site_cost + self.taken_employee_cost)
+        return result
+
 
     def clean(self):
         if self.handover and self.handover <= self.start_at:

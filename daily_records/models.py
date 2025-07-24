@@ -47,7 +47,7 @@ class WorkSession(models.Model):
         on_delete=models.CASCADE,
         related_name='work_sessions'
     )
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='created_worksession') # which site create it
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='created_worksessions') # which site create it
     start_date = models.DateField()  # first daily record date
     end_date = models.DateField()    # last daily record date
     created_at = models.DateTimeField(auto_now_add=True)
