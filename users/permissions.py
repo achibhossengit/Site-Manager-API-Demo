@@ -1,32 +1,22 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class DenyAll(BasePermission):
-    def has_permission(self, request, view):
-        return False
 
+class CustomUserPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ['POST']:
+            return request.user.user_type in ['main_manager', 'site_manager']
+        return True
+    
     def has_object_permission(self, request, view, obj):
-        return False
-
-class IsAdminMainManagerOrReadOnly(BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        
-        # Get user_type safely using getattr
-        user_type = getattr(user, 'user_type', None)
-
-        if user.is_staff or user_type == 'main_manager':
-            return True
+        if request.method in ['PUT']:
+            return request.user.user_type in ['main_manager', 'site_manager']
+        elif request.method == 'PATCH':
+            return request.user.user_type in ['viewer', 'main_manager']
+        elif request.method == 'DELETE':
+            return request.user.user_type == 'main_manager'
         
         return request.method in SAFE_METHODS
 
-
-class IsAdminMainManagerOrSiteManager(BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-
-        # Get user_type safely using getattr
-        user_type = getattr(user, 'user_type', None)
-        return user.is_staff or user_type == 'main_manager' or user_type == 'site_manager'
 
 
 class PromotionPermission(BasePermission):

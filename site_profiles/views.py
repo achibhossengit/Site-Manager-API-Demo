@@ -2,8 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
 from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
-from users.permissions import IsAdminMainManagerOrReadOnly
-from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly
+from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly, IsAdminMainManagerOrReadOnly
 
 class SiteViewSet(ModelViewSet):
     """

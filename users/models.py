@@ -20,43 +20,7 @@ class CustomUser(AbstractUser):
     designation = models.CharField(max_length=20, choices=DESIGNATION_CHOICES, default= 'HELPER')
     address = models.TextField(max_length=200, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    current_site = models.ForeignKey('site_profiles.Site', on_delete=models.SET_NULL, null=True, related_name='employees')
-
-    @property
-    def total_khoraki(self):
-        result = self.daily_records.aggregate(total=Sum('khoraki'))
-        return result['total'] or 0
-
-    @property
-    def total_advance(self):
-        result = self.daily_records.aggregate(total=Sum('advance'))
-        return result['total'] or 0
-
-    @property
-    def total_presents(self):
-        result = self.daily_records.aggregate(total=Sum('present'))
-        return result['total'] or 0
-
-    @property
-    def last_session_payable(self):
-        last_session = self.work_sessions.last()
-        if(last_session == None): return 0
-        
-        if last_session.is_paid == True: return 0
-
-        return last_session.total_payable
-
-
-    @property
-    def total_salary(self):
-        promotions = list(Promotion.objects.filter(employee=self).order_by('date'))
-
-        total = 0
-        for record in self.daily_records.all():
-            rate = get_salary(promotions, record.date)
-            total += rate * record.present
-        return total
-    
+    current_site = models.ForeignKey('site_profiles.Site', on_delete=models.SET_NULL, null=True, related_name='employees')    
 
     def __str__(self):
         return self.username

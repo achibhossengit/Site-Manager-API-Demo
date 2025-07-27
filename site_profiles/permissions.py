@@ -67,3 +67,12 @@ class IsAdminMainManagerOrViewerReadOnly(BasePermission):
             return request.method in SAFE_METHODS
 
         return False
+    
+    
+class IsAdminMainManagerOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        user_type = getattr(user, 'user_type', None)
+        if user.is_staff or user_type == 'main_manager':
+            return True
+        return request.method in SAFE_METHODS
