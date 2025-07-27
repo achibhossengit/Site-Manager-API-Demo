@@ -18,8 +18,6 @@ employee_router = NestedDefaultRouter(router, 'employees', lookup='employee')
 employee_router.register('promotions', PromotionViewSet, basename='employee-promotions')
 
 urlpatterns = [
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.jwt')),
     path('', include(router.urls)),
     path('', include(employee_router.urls)),
     path('current-worksession/<int:emp_id>/', CurrentWorkSession.as_view(), name='current-work-session'),
