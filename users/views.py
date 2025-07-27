@@ -1,5 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from users.models import CustomUser, Promotion
 from users.serializers import PromotionSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
@@ -35,6 +37,11 @@ class CustomUserViewSet(ModelViewSet):
             return UpdateCurrentSiteSerializer
         # for get, head etc
         return CustomUserGetSerializer
+    
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        serializer = CustomUserGetSerializer(request.user)
+        return Response(serializer.data)
     
 class PromotionViewSet(ModelViewSet):
     serializer_class = PromotionSerializer
