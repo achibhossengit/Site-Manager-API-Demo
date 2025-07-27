@@ -25,7 +25,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 class CustomUserUpdateBioSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'phone', 'address']
+        fields = ['first_name', 'last_name', 'username','email', 'phone', 'address']
 
 class UpdateCurrentSiteSerializer(serializers.ModelSerializer):
     class Meta:

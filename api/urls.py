@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
-from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView
+from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
 from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession
 
@@ -33,4 +33,7 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('reset-password/', ResetPasswordView.as_view(), name='reset_password'),
+    path('reset-password-confirm/<uidb64>/<token>/', ResetPasswordConfirmView.as_view(), name='reset-password-confirm'
+    ),
 ]
