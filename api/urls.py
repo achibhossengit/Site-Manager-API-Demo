@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
-from users.views import CustomUserViewSet, PromotionViewSet
+from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView
 from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession
 
@@ -31,4 +31,6 @@ urlpatterns = [
     path('token/create/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
 ]
