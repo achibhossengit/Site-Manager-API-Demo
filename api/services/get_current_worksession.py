@@ -21,8 +21,8 @@ def get_current_worksession(employee_id):
 
     total_work = 0
     total_salary = 0
-    total_advance_taken = 0
-    total_khoraki_taken = 0
+    total_advance = 0
+    total_khoraki = 0
 
     for record in daily_records:
         site_id = record.site.id
@@ -32,8 +32,8 @@ def get_current_worksession(employee_id):
 
         total_work += record.present
         total_salary += today_earned_salary
-        total_advance_taken += record.advance or 0
-        total_khoraki_taken += record.khoraki or 0
+        total_advance += record.advance or 0
+        total_khoraki += record.khoraki or 0
 
         site_data[site_id]['site'] = site_name
         site_data[site_id]['work'] += record.present
@@ -59,10 +59,9 @@ def get_current_worksession(employee_id):
     last_worksession = WorkSession.objects.filter(employee=employee_id).order_by('created_at').last()
     last_session_payable = 0
     if last_worksession and last_worksession.is_paid == False:
-        last_session_payable = last_worksession.total_payable
+        last_session_payable = last_worksession.rest
 
-    current_payable = total_salary - (total_advance_taken + total_khoraki_taken)
-    total_payable = current_payable + last_session_payable
+    # payable = total_salary - (total_advance + total_khoraki)
 
     # Step 5:create current_worksession dict
     current_worksession = {
@@ -70,11 +69,9 @@ def get_current_worksession(employee_id):
         "end_date": daily_records.last().created_at.date(),
         "total_work": total_work,
         "total_salary": total_salary,
-        "total_advance": total_advance_taken,
-        "total_khoraki": total_khoraki_taken,
-        "current_payable": current_payable,
+        "total_advance": total_advance,
+        "total_khoraki": total_khoraki,
         "last_session_payable": last_session_payable,
-        "total_payable": total_payable,
         "work_records": work_records,
     }
 

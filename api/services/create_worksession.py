@@ -4,7 +4,7 @@ from daily_records.models import DailyRecord, WorkSession, SiteWorkRecord
 from users.models import CustomUser
 from api.services.get_current_worksession import get_current_worksession
 
-def create_worksession(emp_id, is_paid, extra_taken):
+def create_worksession(emp_id, is_paid, pay):
     try:
         employee = CustomUser.objects.get(id=emp_id)
     except CustomUser.DoesNotExist:
@@ -19,7 +19,7 @@ def create_worksession(emp_id, is_paid, extra_taken):
         raise ValidationError(f"Current_site is not set yet of employee: {employee}!")
 
     # Get current worksession
-    new_worksession = get_current_worksession(emp_id)
+    current_worksession = get_current_worksession(emp_id)
     
 
     try:
@@ -28,18 +28,18 @@ def create_worksession(emp_id, is_paid, extra_taken):
             work_session = WorkSession.objects.create(
                 employee = employee,
                 site_id = employee_current_site,
-                start_date= new_worksession['start_date'],
-                end_date= new_worksession['end_date'],
-                is_paid=is_paid,
+                start_date= current_worksession['start_date'],
+                end_date= current_worksession['end_date'],
                 
-                extra_taken = extra_taken,
-                total_work = new_worksession['total_work'],
-                current_payable = new_worksession['current_payable'],
-                last_session_payable = new_worksession['last_session_payable'],
+                total_work = current_worksession['total_work'],
+                last_session_payable = current_worksession['last_session_payable'],
+                payable = current_worksession['total_salary'] - (current_worksession['total_advance'] + current_worksession['total_khoraki']),
+                pay = pay,
+                is_paid=is_paid,
             )
 
             # Step 2: Create related SiteWorkRecord entries
-            for record in new_worksession['work_records']:
+            for record in current_worksession['work_records']:
                 SiteWorkRecord.objects.create(
                     work_session=work_session,
                     site_id=record['site_id'],

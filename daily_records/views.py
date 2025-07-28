@@ -136,30 +136,16 @@ class CurrentWorkSession(APIView):
     
     def get(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
-        current_worksession = get_current_worksession(employee_id)
-        
-        current_worksession = get_current_worksession(employee_id)
+        current_worksession = get_current_worksession(employee_id)        
 
-        modified_currentSession = {
-            "start_date": current_worksession["start_date"],
-            "end_date": current_worksession["end_date"],
-            "total_work": current_worksession["total_work"],
-            "total_salary": current_worksession["total_salary"],
-            "total_advance": current_worksession["total_advance"],
-            "total_khoraki": current_worksession["total_khoraki"],
-            "last_session_payable": current_worksession["last_session_payable"],
-            "work_records": current_worksession["work_records"],
-        }
-
-        
-        return Response(modified_currentSession)
+        return Response(current_worksession)
 
     def post(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
         is_paid = request.data.get('is_paid', False)
-        extra_taken = request.data.get('extra_taken', 0)
+        pay = request.data.get('pay', 0)
         try:
-            result = create_worksession(employee_id, is_paid, extra_taken)
+            result = create_worksession(employee_id, is_paid, pay)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
