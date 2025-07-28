@@ -47,11 +47,18 @@ class Site(models.Model):
 
     def get_previous_emp_taken_cost(self):
         from_workrecords = self.work_records.aggregate(total=Sum('total_salary'))
-        from_worksessions = self.created_worksessions.annotate(
-            total_payable=F('current_payable') + F('last_session_payable') + F('extra_taken')).filter(
-                is_paid=True,total_payable__gt=0).aggregate(total=Sum('total_payable'))
+        worksessions = self.created_worksessions.annotate(rest=F('payable') + F('last_session_payable') - F('pay')).exclude(rest=0)
+        worksession_total = 0
+        for session in worksessions:
+            if session.is_paid:
+                if session.payable < 0:
+                    worksession_total += session.rest
+                else:
+                    worksession_total += (session.rest + session.pay)
+            else:
+                worksession_total += session.pay
 
-        result = (from_workrecords.get('total') or 0) + (from_worksessions.get('total') or 0)
+        result = (from_workrecords.get('total') or 0) + worksession_total
         return result
         
 
