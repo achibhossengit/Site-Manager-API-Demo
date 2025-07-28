@@ -52,18 +52,17 @@ class WorkSession(models.Model):
     end_date = models.DateField()    # last daily record date
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    is_paid = models.BooleanField(default=False)
     update_permission = models.BooleanField(default=False)
-    extra_taken = models.PositiveIntegerField(default=0) # extra taken during session creation time
+    
     total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
-    current_payable = models.IntegerField()
     last_session_payable = models.IntegerField(default=0)
+    payable = models.IntegerField()
+    pay = models.PositiveIntegerField(default=0) # payment during session creation time
+    is_paid = models.BooleanField(default=False)
     
     @property
-    def total_payable(self):
-        return self.current_payable + self.last_session_payable + self.extra_taken
-
+    def rest(self):
+        return (self.payable + self.last_session_payable) - self.pay
 
     def __str__(self):
         return f"{self.employee.username} | {self.start_date} - {self.end_date}"
