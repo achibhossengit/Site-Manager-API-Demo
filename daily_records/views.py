@@ -138,7 +138,21 @@ class CurrentWorkSession(APIView):
         employee_id = self.kwargs['emp_id']
         current_worksession = get_current_worksession(employee_id)
         
-        return Response(current_worksession)
+        current_worksession = get_current_worksession(employee_id)
+
+        modified_currentSession = {
+            "start_date": current_worksession["start_date"],
+            "end_date": current_worksession["end_date"],
+            "total_work": current_worksession["total_work"],
+            "total_salary": current_worksession["total_salary"],
+            "total_advance": current_worksession["total_advance"],
+            "total_khoraki": current_worksession["total_khoraki"],
+            "last_session_payable": current_worksession["last_session_payable"],
+            "work_records": current_worksession["work_records"],
+        }
+
+        
+        return Response(modified_currentSession)
 
     def post(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
