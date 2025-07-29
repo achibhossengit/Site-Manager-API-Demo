@@ -66,7 +66,7 @@ class WorkSessionSerializer(serializers.ModelSerializer):
             'end_date',
             'is_paid',
             'update_permission',
-            'pay',
+            'pay_or_return',
             'last_session_payable',
             'payable',
             'rest',

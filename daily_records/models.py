@@ -57,12 +57,11 @@ class WorkSession(models.Model):
     total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
     last_session_payable = models.IntegerField(default=0)
     payable = models.IntegerField()
-    pay = models.PositiveIntegerField(default=0) # payment during session creation time
-    is_paid = models.BooleanField(default=False)
+    pay_or_return = models.IntegerField(default=0) # payment during session creation time
     
     @property
     def rest(self):
-        return (self.payable + self.last_session_payable) - self.pay
+        return (self.payable + self.last_session_payable) - self.pay_or_return
 
     def __str__(self):
         return f"{self.employee.username} | {self.start_date} - {self.end_date}"
