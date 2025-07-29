@@ -46,19 +46,10 @@ class Site(models.Model):
         return current_taken_cost.get('total_taken') or 0
 
     def get_previous_emp_taken_cost(self):
-        from_workrecords = self.work_records.aggregate(total=Sum('total_salary'))
-        worksessions = self.created_worksessions.annotate(rest=F('payable') + F('last_session_payable') - F('pay')).exclude(rest=0)
-        worksession_total = 0
-        for session in worksessions:
-            if session.is_paid:
-                if session.payable < 0:
-                    worksession_total += session.rest
-                else:
-                    worksession_total += (session.rest + session.pay)
-            else:
-                worksession_total += session.pay
-
-        result = (from_workrecords.get('total') or 0) + worksession_total
+        workrecords = self.work_records.annotate(total = F('khoraki_taken') + F('advance_taken')).aggregate(total_taken=Sum('total'))
+        worksessions = self.created_worksessions.aggregate(total_taken=Sum('pay_or_return'))
+        
+        result = (workrecords.get('total_taken') or 0) + (worksessions.get('total_taken') or 0)
         return result
         
 
