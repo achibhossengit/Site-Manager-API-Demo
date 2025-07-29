@@ -111,7 +111,7 @@ class IsManagerUpdateOrConditionalReadonly(BasePermission):
         if request.user.user_type == 'viewer':
             return request.method in SAFE_METHODS
         elif request.user.user_type == 'main_manager':
-            # main manager can update is_paid field based on update permission
+            # main manager can update pay_or_return field based on update permission
             return obj.update_permission == True or request.method in SAFE_METHODS
         elif request.user.user_type == 'site_manager':
             # only created site manager can update only update permission filed this field

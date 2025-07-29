@@ -58,11 +58,9 @@ def get_current_worksession(employee_id):
     # Step 4: fetch last worksession
     last_worksession = WorkSession.objects.filter(employee=employee_id).order_by('created_at').last()
     last_session_payable = 0
-    if last_worksession and last_worksession.is_paid == False:
-        last_session_payable = last_worksession.rest
-
-    # payable = total_salary - (total_advance + total_khoraki)
-
+    if last_worksession: 
+        last_session_payable = last_worksession.rest_payable
+        
     # Step 5:create current_worksession dict
     current_worksession = {
         "start_date": daily_records.first().created_at.date(),

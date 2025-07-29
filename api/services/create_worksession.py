@@ -4,7 +4,7 @@ from daily_records.models import DailyRecord, WorkSession, SiteWorkRecord
 from users.models import CustomUser
 from api.services.get_current_worksession import get_current_worksession
 
-def create_worksession(emp_id, is_paid, pay):
+def create_worksession(emp_id, pay_or_return):
     try:
         employee = CustomUser.objects.get(id=emp_id)
     except CustomUser.DoesNotExist:
@@ -33,9 +33,8 @@ def create_worksession(emp_id, is_paid, pay):
                 
                 total_work = current_worksession['total_work'],
                 last_session_payable = current_worksession['last_session_payable'],
-                payable = current_worksession['total_salary'] - (current_worksession['total_advance'] + current_worksession['total_khoraki']),
-                pay = pay,
-                is_paid=is_paid,
+                this_session_payable = current_worksession['total_salary'] - (current_worksession['total_advance'] + current_worksession['total_khoraki']),
+                pay_or_return = pay_or_return,
             )
 
             # Step 2: Create related SiteWorkRecord entries

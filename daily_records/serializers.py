@@ -64,12 +64,11 @@ class WorkSessionSerializer(serializers.ModelSerializer):
             'employee_username',
             'start_date',
             'end_date',
-            'is_paid',
             'update_permission',
             'pay_or_return',
             'last_session_payable',
-            'payable',
-            'rest',
+            'this_session_payable',
+            'rest_payable',
             'created_at',
             'updated_at',
             'site_records',
@@ -83,10 +82,10 @@ class WorkSessionPermissionUpdateSerializer(serializers.ModelSerializer):
         model = WorkSession
         fields = ['update_permission']
 
-class WorkSessionIsPaidUpdateSerializer(serializers.ModelSerializer):
+class WorkSessionPayOrReturnFieldUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkSession
-        fields = ['is_paid']
+        fields = ['pay_or_return']
     
     def save(self, **kwargs):
         instance = super().save(**kwargs)

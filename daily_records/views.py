@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from daily_records.models import DailyRecord, WorkSession
-from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionIsPaidUpdateSerializer
+from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer
 from daily_records.permissions import IsAdminOrConditionalPermissionForDailyRecord, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
 from api.services.get_current_worksession import get_current_worksession
 from api.services.create_worksession import create_worksession
@@ -89,7 +89,7 @@ class WorkSessionViewSet(ModelViewSet):
             if(self.request.user.user_type == 'site_manager'):
                 return WorkSessionPermissionUpdateSerializer
             elif(self.request.user.user_type == 'main_manager'):
-                return WorkSessionIsPaidUpdateSerializer
+                return WorkSessionPayOrReturnFieldUpdateSerializer
                 
         return WorkSessionSerializer
         
@@ -142,10 +142,9 @@ class CurrentWorkSession(APIView):
 
     def post(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
-        is_paid = request.data.get('is_paid', False)
-        pay = request.data.get('pay', 0)
+        pay_or_return = request.data.get('pay_or_return', 0)
         try:
-            result = create_worksession(employee_id, is_paid, pay)
+            result = create_worksession(employee_id, pay_or_return)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
