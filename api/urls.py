@@ -20,7 +20,7 @@ router.register('site-bills', SiteBillViewSet, basename='site-bills')
 router.register('daily-records', DailyRecordViewSet, basename='daily-records')
 router.register('work-sessions', WorkSessionViewSet, basename='work-sessions')
 
-employee_router = NestedDefaultRouter(router, 'users', lookup='users')
+employee_router = NestedDefaultRouter(router, 'users', lookup='user')
 employee_router.register('promotions', PromotionViewSet, basename='employee-promotions')
 
 urlpatterns = [
