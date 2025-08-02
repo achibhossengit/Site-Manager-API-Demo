@@ -11,17 +11,21 @@ from api.services.get_salary_by_employee import get_salary_by_employee
 
 class DailyRecord(models.Model):
     PRESENT_CHOICES = [
-        (0.0, 'Absent'),
+        (0, 'Absent'),
         (0.5, 'Half Day'),
-        (1.0, 'Full Day'),
+        (1, 'Full Day'),
+        (1.5, '1.5 Day'),
+        (2, '2 Day'),
+        (2.5, '2.5 Day'),
+        (3, '3 Day'),
     ]
     
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
     date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
-    present = models.FloatField(choices=PRESENT_CHOICES, default=0.0)
-    khoraki = models.PositiveIntegerField(validators=[MaxValueValidator(1000)])
-    advance = models.PositiveIntegerField(blank=True, null=True)
+    present = models.FloatField(choices=PRESENT_CHOICES, default=0)
+    khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
+    advance = models.PositiveIntegerField(default=0)
     comment = models.CharField(max_length=150, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

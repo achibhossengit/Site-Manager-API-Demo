@@ -34,13 +34,12 @@ class DailyRecordUpdatePermissionSerializer(ModelSerializer):
 
 
 class SiteWorkRecordSerializer(ModelSerializer):
-    site_name = serializers.CharField(source='site.name', read_only=True)
+    site = serializers.CharField(source='site.name', read_only=True)
 
     class Meta:
         model = SiteWorkRecord
         fields = [
             'site',
-            'site_name',
             'work',
             'total_salary',
             'khoraki_taken',
@@ -52,6 +51,7 @@ class SiteWorkRecordSerializer(ModelSerializer):
         
 
 class WorkSessionSerializer(serializers.ModelSerializer):
+    site_name = serializers.CharField(source='site.name', read_only=True)
     employee_username = serializers.CharField(source='employee.username', read_only=True)
     site_records = SiteWorkRecordSerializer(source='records', many=True, read_only=True)
     
@@ -59,7 +59,7 @@ class WorkSessionSerializer(serializers.ModelSerializer):
         model = WorkSession
         fields = [
             'id',
-            'site',
+            'site_name',
             'employee',
             'employee_username',
             'start_date',

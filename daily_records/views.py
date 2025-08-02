@@ -1,6 +1,8 @@
+from django.db import transaction
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from daily_records.models import DailyRecord, WorkSession
@@ -32,7 +34,7 @@ class DailyRecordViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermissionForDailyRecord]
-    filterset_fields = ['site', 'employee']
+    filterset_fields = ['site', 'employee', 'date']
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -55,6 +57,31 @@ class DailyRecordViewSet(ModelViewSet):
             return DailyRecord.objects.filter(employee = user)
         
         return DailyRecord.objects.none()
+    
+    
+    @action(detail=False, methods=['post'], url_path='bulk')
+    def bulk(self, request):
+        
+        records = request.data.get('records')
+        record_date = request.data.get('date')
+        if not isinstance(records, list) or not record_date:
+            return Response(
+                {"detail": "Need records and record_date both"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        site = request.user.current_site
+        for item in records:
+            item["site"] = site
+            item["date"] = record_date
+
+        serializer = self.get_serializer(data=records, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     
 class WorkSessionViewSet(ModelViewSet):
