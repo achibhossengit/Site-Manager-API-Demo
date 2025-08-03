@@ -48,13 +48,13 @@ class DailyRecordViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_staff or user.user_type in ['main_manager', 'viewer']:
-            return DailyRecord.objects.all()
+            return DailyRecord.objects.all().order_by('date')
         
         if user.user_type == 'site_manager':
-            return DailyRecord.objects.filter(site=user.current_site)
+            return DailyRecord.objects.filter(site=user.current_site).order_by('date')
 
         if user.user_type == 'employee':
-            return DailyRecord.objects.filter(employee = user)
+            return DailyRecord.objects.filter(employee = user).order_by('date')
         
         return DailyRecord.objects.none()
     
