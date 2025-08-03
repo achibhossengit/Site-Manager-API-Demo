@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
-from users.serializers import PromotionSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
+from users.serializers import PromotionSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
@@ -50,6 +50,12 @@ class CustomUserViewSet(ModelViewSet):
     @action(detail=False, methods=['get'], url_path='me')
     def me(self, request):
         serializer = CustomUserGetSerializer(request.user)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='ids')
+    def ids(self, request):
+        queryset = self.get_queryset()
+        serializer = CustomUserIDsSerializer(queryset, many=True)
         return Response(serializer.data)
     
     
@@ -125,7 +131,7 @@ class PromotionViewSet(ModelViewSet):
         user = self.request.user
         emp_id = self.kwargs.get('user_pk')
 
-        queryset = Promotion.objects.filter(employee_id=emp_id)
+        queryset = Promotion.objects.filter(employee_id=emp_id).order_by('-date')
 
         if user.user_type in ['main_manager', 'viewer']:
             return queryset
