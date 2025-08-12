@@ -5,6 +5,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +13,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
-from users.serializers import PromotionSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
+from daily_records.models import DailyRecord
+from users.serializers import PromotionSerializer, PromotionCreateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
@@ -124,7 +126,6 @@ class ResetPasswordConfirmView(APIView):
 
     
 class PromotionViewSet(ModelViewSet):
-    serializer_class = PromotionSerializer
     permission_classes = [IsAuthenticated, PromotionPermission]
     
     def get_queryset(self):
@@ -143,4 +144,10 @@ class PromotionViewSet(ModelViewSet):
             return queryset.filter(employee=user)
 
         return Promotion.objects.none()
+
+    def get_serializer_class(self):
+        if(self.request.method == 'POST'):
+            return PromotionCreateSerializer
+        return PromotionSerializer
+    
     

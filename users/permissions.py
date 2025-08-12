@@ -21,7 +21,7 @@ class CustomUserPermission(BasePermission):
 
 class PromotionPermission(BasePermission):
     def has_permission(self, request, view):
-        if request.user.user_type == 'main_manager':
+        if request.user.user_type == 'site_manager':
             return True
         return request.method in SAFE_METHODS
     
