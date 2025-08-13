@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
 from daily_records.models import DailyRecord
-from users.serializers import PromotionSerializer, PromotionCreateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
+from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
@@ -148,6 +148,7 @@ class PromotionViewSet(ModelViewSet):
     def get_serializer_class(self):
         if(self.request.method == 'POST'):
             return PromotionCreateSerializer
+        elif(self.request.method == 'PUT'):
+            return PromotionUpdateSerializer
         return PromotionSerializer
-    
     

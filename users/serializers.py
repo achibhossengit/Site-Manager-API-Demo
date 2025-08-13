@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction, IntegrityError
 from rest_framework import serializers
 from users.models import CustomUser, Promotion
-from daily_records.models import DailyRecord
+from daily_records.models import DailyRecord, WorkSession
 
 class CustomUserIDsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,10 +71,9 @@ class PromotionCreateSerializer(serializers.ModelSerializer):
     def validate_date(self, value):
         employee = self._get_employee()
 
-        # chronological constraint with existing promotions
         promos = Promotion.objects.filter(employee=employee).order_by('date')
         if not promos.exists():
-            # if has no existing promos first promo date have to be the equal of this labour join_date
+            # if has no existing promos
             joined = employee.date_joined
             if hasattr(joined, "date"):
                 joined_date = joined.date()
@@ -84,28 +83,73 @@ class PromotionCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"প্রথম প্রোমোশনের তারিখ অবশ্যই যোগদানের তারিখ ({joined_date}) এর সমান হতে হবে।")
         else:
             last_promo_date = promos.last().date
-            if value <= last_promo_date:
+            last_session_end_date = WorkSession.objects.filter(employee=employee).order_by('end_date').last().end_date
+            check_date = max(last_promo_date, last_session_end_date) if last_session_end_date else last_promo_date
+            if value <= check_date:
                 raise serializers.ValidationError(
-                    "নতুন প্রোমোশনের তারিখ অবশ্যই পূর্ববর্তী প্রোমোশনের তারিখের পরে হতে হবে।"
+                    f"নতুন প্রোমোশনের তারিখ অবশ্যই {check_date} পরে হতে হবে।"
                 )
-
-            # daily records পরীক্ষা
-            dr_qs = DailyRecord.objects.filter(employee=employee).order_by('date')
-            if not dr_qs.exists():
-                raise serializers.ValidationError(
-                    "কর্মীর দৈনিক রেকর্ড খালি আছে — নতুন প্রোমোশন যোগ করা যাবে না।"
-                )
-                
-            first_dr = dr_qs.first().date
-            last_dr = dr_qs.last().date
-            if not (first_dr <= value <= last_dr):
-                raise serializers.ValidationError(
-                    f"প্রোমোশনের তারিখ অবশ্যই দৈনিক রেকর্ডের সময়সীমা ({first_dr} - {last_dr}) এর মধ্যে হতে হবে।"
-                )
-                
+    
         return value
 
     def create(self, validated_data):
         # Employee ইনজেকশন
         employee = self._get_employee()
         return Promotion.objects.create(employee=employee, **validated_data)
+    
+
+class PromotionUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Promotion
+        fields = ['date', 'current_salary']
+
+    def _get_employee(self):
+        view = self.context.get('view')
+        if not view:
+            raise serializers.ValidationError("Invalid context: view missing.")
+        emp_id = view.kwargs.get('user_pk')
+        if not emp_id:
+            raise serializers.ValidationError("Employee id not provided in URL.")
+        return get_object_or_404(CustomUser, pk=emp_id)
+    
+    def validate(self, attrs):  # ✅ Fixed: Now properly indented inside the class
+        if not hasattr(self, 'instance') or self.instance is None:
+            raise serializers.ValidationError("আপডেট করার জন্য একটি বিদ্যমান রেকর্ড প্রয়োজন।")
+
+        # Get employee
+        employee = self._get_employee()
+
+        # Step 1: If entry is restricted
+        work_sessions = list(WorkSession.objects.filter(employee=employee).order_by('end_date'))
+        if work_sessions and self.instance.date <= work_sessions[-1].end_date:
+            raise serializers.ValidationError(
+                "এই পদোন্নতি entry তে ইতিমধ্যেই কাজের সেশন রয়েছে — কোনো field update করা যাবে না।"
+            )
+
+        # Step 2: If entry is not restricted, proceed with date validation (if date is being changed)
+        new_date = attrs.get('date')
+        if new_date and new_date != self.instance.date:        
+            promos = list(Promotion.objects.filter(employee=employee).order_by('date'))
+            
+            # Case 1: First promotion → date cannot be changed
+            if self.instance == promos[0]:
+                raise serializers.ValidationError({"date": "প্রথম পদোন্নতির তারিখ পরিবর্তন করা যাবে না।"})
+
+            # Case 2: Last promotion
+            elif self.instance == promos[-1]:
+                check_date = max(work_sessions[-1].end_date, promos[-2].date) if work_sessions else promos[-2].date
+                if new_date <= check_date:
+                    raise serializers.ValidationError(
+                        {"date": f"নতুন তারিখ অবশ্যই {check_date} পরে হতে হবে।"}
+                    )
+
+            # Case 3: Middle promotion → must be between previous and next promotion dates
+            else:
+                index = promos.index(self.instance)
+                check_date = max(work_sessions[-1].end_date, promos[index - 1].date) if work_sessions else promos[-1].date
+                if not (check_date < new_date < promos[index + 1].date):
+                    raise serializers.ValidationError(
+                        {"date": f"নতুন তারিখ অবশ্যই {check_date} এবং {promos[index + 1].date} এর মধ্যে হতে হবে।"}
+                    )
+
+        return attrs
