@@ -17,7 +17,7 @@ class CustomUserGetSerializer(serializers.ModelSerializer):
 class CustomUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name','username', 'current_site', 'phone', 'address','password', 'designation']
+        fields = ['id', 'first_name', 'last_name','username', 'current_site', 'phone', 'address','password', 'designation']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -56,7 +56,7 @@ class PromotionSerializer(serializers.ModelSerializer):
 class PromotionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion
-        fields = ['date', 'current_salary']
+        fields = ['id', 'date', 'current_salary']
 
     def _get_employee(self):
         view = self.context.get('view')
@@ -83,11 +83,11 @@ class PromotionCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"প্রথম প্রোমোশনের তারিখ অবশ্যই যোগদানের তারিখ ({joined_date}) এর সমান হতে হবে।")
         else:
             last_promo_date = promos.last().date
-            last_session_end_date = WorkSession.objects.filter(employee=employee).order_by('end_date').last().end_date
-            check_date = max(last_promo_date, last_session_end_date) if last_session_end_date else last_promo_date
+            last_session = WorkSession.objects.filter(employee=employee).order_by('end_date').last()
+            check_date = max(last_promo_date, last_session.end_date) if last_session else last_promo_date
             if value <= check_date:
                 raise serializers.ValidationError(
-                    f"নতুন প্রোমোশনের তারিখ অবশ্যই {check_date} পরে হতে হবে।"
+                    f"নতুন প্রোমোশনের তারিখ অবশ্যই ({check_date}) এর পরে হতে হবে।"
                 )
     
         return value
@@ -101,7 +101,7 @@ class PromotionCreateSerializer(serializers.ModelSerializer):
 class PromotionUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion
-        fields = ['date', 'current_salary']
+        fields = ['id', 'date', 'current_salary']
 
     def _get_employee(self):
         view = self.context.get('view')
@@ -140,7 +140,7 @@ class PromotionUpdateSerializer(serializers.ModelSerializer):
                 check_date = max(work_sessions[-1].end_date, promos[-2].date) if work_sessions else promos[-2].date
                 if new_date <= check_date:
                     raise serializers.ValidationError(
-                        {"date": f"নতুন তারিখ অবশ্যই {check_date} পরে হতে হবে।"}
+                        {"date": f"নতুন তারিখ অবশ্যই ({check_date}) এর পরে হতে হবে।"}
                     )
 
             # Case 3: Middle promotion → must be between previous and next promotion dates
@@ -149,7 +149,7 @@ class PromotionUpdateSerializer(serializers.ModelSerializer):
                 check_date = max(work_sessions[-1].end_date, promos[index - 1].date) if work_sessions else promos[-1].date
                 if not (check_date < new_date < promos[index + 1].date):
                     raise serializers.ValidationError(
-                        {"date": f"নতুন তারিখ অবশ্যই {check_date} এবং {promos[index + 1].date} এর মধ্যে হতে হবে।"}
+                        {"date": f"নতুন তারিখ অবশ্যই ({check_date} এবং {promos[index + 1].date}) এর মধ্যে হতে হবে।"}
                     )
 
         return attrs

@@ -5,7 +5,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
-from daily_records.models import DailyRecord
+from daily_records.models import WorkSession
 from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
@@ -152,3 +152,25 @@ class PromotionViewSet(ModelViewSet):
             return PromotionUpdateSerializer
         return PromotionSerializer
     
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        employee = instance.employee
+
+        # Get promotions for this employee ordered by date (ascending)
+        promos = list(Promotion.objects.filter(employee=employee).order_by('date'))
+
+        # 1) First promotion cannot be deleted
+        if promos and instance == promos[0]:
+            raise ValidationError({"detail": "প্রথম পদোন্নতি মুছে ফেলা যাবে না।"})
+
+        # 2) If there are work sessions and the last session's end_date
+        #    is >= this promotion date, prevent deletion.
+        work_sessions = list(WorkSession.objects.filter(employee=employee).order_by('end_date'))
+        if work_sessions and instance.date <= work_sessions[-1].end_date:
+            raise ValidationError({
+                "detail": "এই প্রোমোশনের পরে/সময়ে কাজের সেশন তৈরি হয়েছে — মুছে ফেলা যাবে না।"
+            })
+
+        # otherwise proceed with normal destroy
+        return super().destroy(request, *args, **kwargs)
