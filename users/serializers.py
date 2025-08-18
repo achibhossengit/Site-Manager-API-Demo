@@ -3,6 +3,7 @@ from django.db import transaction, IntegrityError
 from rest_framework import serializers
 from users.models import CustomUser, Promotion
 from daily_records.models import DailyRecord, WorkSession
+from django.utils.timezone import localtime
 
 class CustomUserIDsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,7 +77,7 @@ class PromotionCreateSerializer(serializers.ModelSerializer):
             # if has no existing promos
             joined = employee.date_joined
             if hasattr(joined, "date"):
-                joined_date = joined.date()
+                joined_date = localtime(joined).date()
             else:
                 joined_date = joined
             if value != joined_date:
