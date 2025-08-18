@@ -1,8 +1,8 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
-from site_profiles.serializers import SiteSerializer, SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
-from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly, IsAdminMainManagerOrReadOnly
+from site_profiles.serializers import SiteSerializer, SiteSerializerForViewer, SiteSerializerForManager,SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
+from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly, SiteProfileAccessPermissions
 
 class SiteViewSet(ModelViewSet):
     """
@@ -18,9 +18,28 @@ class SiteViewSet(ModelViewSet):
         - All users (authenticated or not) can view site data.
         - Only Admins and Main Managers have full modification rights.
     """
-    serializer_class = SiteSerializer
-    permission_classes = [IsAuthenticated, IsAdminMainManagerOrReadOnly]
-    queryset = Site.objects.all()
+    permission_classes = [IsAuthenticated, SiteProfileAccessPermissions]
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.user_type in ['main_manager', 'viewer']:
+            return Site.objects.all()
+        elif user.user_type == 'site_manager':
+            return Site.objects.filter(id=user.current_site_id)
+
+        return Site.objects.none()
+    
+    
+    def get_serializer_class(self):
+        user = self.request.user
+        if self.action == 'list':
+            return SiteSerializer
+        if user.user_type == 'viewer':
+            return SiteSerializerForViewer
+        elif user.user_type in ['main_manager', 'site_manager']:
+            return SiteSerializerForManager
+        return SiteSerializer
+
     
     
 class SiteCostViewSet(ModelViewSet):
@@ -45,7 +64,7 @@ class SiteCostViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
-    filterset_fields = ['site']
+    filterset_fields = ['site', 'date']
     
     def get_serializer_class(self):
         if self.request.method == 'PATCH':
@@ -84,7 +103,7 @@ class SiteCashViewSet(ModelViewSet):
     """
     
     permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermission]
-    filterset_fields = ['site']
+    filterset_fields = ['site', 'date']
     
     def get_serializer_class(self):
         if self.request.method == 'PATCH':

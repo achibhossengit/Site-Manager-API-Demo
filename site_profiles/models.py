@@ -114,7 +114,7 @@ class Site(models.Model):
 class SiteCost(models.Model):
     site = models.ForeignKey(Site, related_name='site_costs', on_delete=models.CASCADE)
     date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
@@ -126,7 +126,7 @@ class SiteCost(models.Model):
 class SiteCash(models.Model):
     site = models.ForeignKey(Site, related_name='site_cashes', on_delete=models.CASCADE)
     date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
