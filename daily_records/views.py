@@ -133,6 +133,20 @@ class WorkSessionViewSet(ModelViewSet):
         else: return WorkSession.objects.none()
         
         
+    @action(detail=False, methods=['get'], url_path='last_session')
+    def last_session(self, request):
+        last_session = self.get_queryset().order_by('end_date').last()
+
+        if not last_session:
+            return Response(
+                {"detail": "কোনো কাজের সেশন পাওয়া যায়নি।"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(last_session)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        
         
 class CurrentWorkSession(APIView):
     """
