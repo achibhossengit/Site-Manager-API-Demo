@@ -79,7 +79,12 @@ class Site(models.Model):
 
     @property
     def total_site_cost(self):
-        result = self.site_costs.aggregate(total=Sum('amount'))
+        result = self.site_costs.filter(type='st').aggregate(total=Sum('amount'))
+        return result.get('total') or 0
+
+    @property
+    def total_other_cost(self):
+        result = self.site_costs.filter(type='ot').aggregate(total=Sum('amount'))
         return result.get('total') or 0
     
     @property
@@ -100,7 +105,7 @@ class Site(models.Model):
     
     @property
     def site_balance(self):
-        result = self.total_site_cash - (self.total_site_cost + self.taken_employee_cost)
+        result = self.total_site_cash - (self.total_site_cost + self.total_other_cost + self.taken_employee_cost)
         return result
 
 

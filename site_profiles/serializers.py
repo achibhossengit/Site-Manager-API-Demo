@@ -10,6 +10,7 @@ class SiteSerializer(ModelSerializer):
 class SiteSerializerForViewer(ModelSerializer):
     total_site_bill = serializers.IntegerField(read_only=True)
     total_site_cost = serializers.IntegerField(read_only=True)
+    total_other_cost = serializers.IntegerField(read_only=True)
     total_rose_taken = serializers.FloatField(read_only=True)
     actual_employee_cost = serializers.IntegerField(read_only=True)
     profit = serializers.IntegerField(read_only=True)
@@ -23,6 +24,7 @@ class SiteSerializerForViewer(ModelSerializer):
         
 class SiteSerializerForManager(ModelSerializer):
     total_site_cost = serializers.IntegerField(read_only=True)
+    total_other_cost = serializers.IntegerField(read_only=True)
     total_site_cash = serializers.IntegerField(read_only=True)
     taken_employee_cost = serializers.IntegerField(read_only=True)
     site_balance = serializers.IntegerField(read_only=True)
