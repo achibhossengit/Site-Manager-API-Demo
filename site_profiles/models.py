@@ -12,6 +12,11 @@ PERMISSION_CHOICES = [
     (2, 'Delete Only'),
 ]
 
+COST_TYPE_CHOICES = [
+    ('st', 'Site Cost'),
+    ('ot', 'Other Cost'),
+]
+
 class Site(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=500)
@@ -116,6 +121,7 @@ class SiteCost(models.Model):
     date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
     title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
+    type = models.CharField(choices=COST_TYPE_CHOICES, default='st')
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
 
