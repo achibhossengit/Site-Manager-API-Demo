@@ -57,10 +57,10 @@ class IsAdminOrConditionalPermission(BasePermission):
         return False
     
     
-class IsAdminMainManagerOrViewerReadOnly(BasePermission):
+class SiteBillAccessPermission(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        if user.is_staff or user.user_type == 'main_manager':
+        if user.user_type == 'main_manager':
             return True
                 
         if user.user_type == 'viewer':

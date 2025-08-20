@@ -2,7 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
 from site_profiles.serializers import SiteSerializer, SiteSerializerForViewer, SiteSerializerForManager,SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
-from site_profiles.permissions import IsAdminOrConditionalPermission, IsAdminMainManagerOrViewerReadOnly, SiteProfileAccessPermissions
+from site_profiles.permissions import IsAdminOrConditionalPermission, SiteBillAccessPermission, SiteProfileAccessPermissions
 
 class SiteViewSet(ModelViewSet):
     """
@@ -126,7 +126,7 @@ class SiteBillViewSet(ModelViewSet):
         - Main Manager → can get, create, update, delete.
         - Viewer → can only view (
     """
-    permission_classes = [IsAuthenticated, IsAdminMainManagerOrViewerReadOnly]
+    permission_classes = [IsAuthenticated, SiteBillAccessPermission]
     serializer_class = SiteBillSerializer
-    queryset = SiteBill.objects.all()
+    queryset = SiteBill.objects.all().order_by('-date')
     filterset_fields = ['site']
