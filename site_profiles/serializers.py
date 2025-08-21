@@ -8,6 +8,7 @@ class SiteSerializer(ModelSerializer):
         fields = '__all__'
         
 class SiteSerializerForViewer(ModelSerializer):
+    site_manager = serializers.SerializerMethodField()
     total_site_bill = serializers.IntegerField(read_only=True)
     total_site_cost = serializers.IntegerField(read_only=True)
     total_other_cost = serializers.IntegerField(read_only=True)
@@ -22,7 +23,18 @@ class SiteSerializerForViewer(ModelSerializer):
         model = Site
         fields = '__all__'
         
+    def get_site_manager(self, obj):
+        result = obj.employees.filter(user_type='site_manager').first()
+        if result:
+            return {
+                "id": result.id,
+                "first_name": result.first_name,
+                "last_name" : result.last_name
+            }
+        return None
+        
 class SiteSerializerForManager(ModelSerializer):
+    site_manager = serializers.SerializerMethodField()
     total_site_cost = serializers.IntegerField(read_only=True)
     total_other_cost = serializers.IntegerField(read_only=True)
     total_site_cash = serializers.IntegerField(read_only=True)
@@ -32,6 +44,16 @@ class SiteSerializerForManager(ModelSerializer):
     class Meta:
         model = Site
         fields = '__all__'
+        
+    def get_site_manager(self, obj):
+        result = obj.employees.filter(user_type='site_manager').first()
+        if result:
+            return {
+                "id": result.id,
+                "first_name": result.first_name,
+                "last_name" : result.last_name
+            }
+        return None
 
         
         
