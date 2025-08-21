@@ -8,7 +8,7 @@ from django.utils.timezone import localtime
 class CustomUserIDsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username']
+        fields = ['id', 'first_name', 'last_name']
 
 class CustomUserGetSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,8 +44,29 @@ class UpdateCurrentSiteSerializer(serializers.ModelSerializer):
 class UpdateUserTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['current_site', 'user_type']
-        
+        fields = ['user_type']
+
+    # check which field gona change
+    def update(self, instance, validated_data):
+        new_user_type = validated_data.get('user_type')
+
+        if new_user_type == 'site_manager' and instance.current_site:
+            site = instance.current_site
+
+            # if already has a site manager for this site. so, firstly make him employee to avoid two site sitemanager for same site issue
+            existing_manager = CustomUser.objects.filter(
+                current_site=site, user_type='site_manager'
+            ).exclude(id=instance.id).first()
+
+            if existing_manager:
+                existing_manager.user_type = 'employee'
+                existing_manager.save()
+
+        # Now set newuser user_type
+        instance.user_type = new_user_type
+        instance.save()
+        return instance
+
 
 
 class PromotionSerializer(serializers.ModelSerializer):

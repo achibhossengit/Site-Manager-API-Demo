@@ -56,8 +56,11 @@ class CustomUserViewSet(ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='ids')
     def ids(self, request):
-        queryset = self.get_queryset()
-        serializer = CustomUserIDsSerializer(queryset, many=True)
+        # get base queryset according to user's permissions
+        base_qs = self.get_queryset()
+        # apply DRF filter backends (so filterset_fields works)
+        filtered_qs = self.filter_queryset(base_qs)
+        serializer = CustomUserIDsSerializer(filtered_qs, many=True)
         return Response(serializer.data)
     
     
