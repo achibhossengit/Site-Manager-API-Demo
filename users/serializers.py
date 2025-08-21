@@ -18,7 +18,7 @@ class CustomUserGetSerializer(serializers.ModelSerializer):
 class CustomUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'first_name', 'last_name','username', 'current_site', 'phone', 'address','password', 'designation']
+        fields = ['id', 'first_name', 'last_name','username', 'current_site', 'address','password', 'designation']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -34,7 +34,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 class CustomUserUpdateBioSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username','email', 'phone', 'address']
+        fields = ['first_name', 'last_name', 'username','email', 'address', 'designation']
 
 class UpdateCurrentSiteSerializer(serializers.ModelSerializer):
     class Meta:

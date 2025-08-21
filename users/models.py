@@ -19,7 +19,6 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default= 'employee')
     designation = models.CharField(max_length=20, choices=DESIGNATION_CHOICES, default= 'HELPER')
     address = models.TextField(max_length=200, blank=True, null=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
     current_site = models.ForeignKey('site_profiles.Site', on_delete=models.SET_NULL, null=True, related_name='employees')    
 
     def __str__(self):
