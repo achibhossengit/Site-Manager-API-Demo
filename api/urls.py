@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
-from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet
+from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, SiteInfoView
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession
 
 from rest_framework_simplejwt.views import (
@@ -14,6 +14,7 @@ from rest_framework_simplejwt.views import (
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='users')
 router.register('sites', SiteViewSet, basename='sites')
+router.register('sites-info', SiteInfoView, basename='sites-info')
 router.register('site-costs', SiteCostViewSet, basename='site-costs')
 router.register('site-cashes', SiteCashViewSet, basename='site-cashes')
 router.register('site-bills', SiteBillViewSet, basename='site-bills')

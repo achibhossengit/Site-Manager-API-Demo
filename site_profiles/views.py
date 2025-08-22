@@ -39,8 +39,11 @@ class SiteViewSet(ModelViewSet):
         elif user.user_type in ['main_manager', 'site_manager']:
             return SiteSerializerForManager
         return SiteSerializer
-
     
+class SiteInfoView(ModelViewSet):
+    serializer_class = SiteSerializer
+    queryset = Site.objects.all()
+    http_method_names = ['get', 'head', 'options']
     
 class SiteCostViewSet(ModelViewSet):
     """
