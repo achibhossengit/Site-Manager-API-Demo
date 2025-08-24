@@ -5,11 +5,15 @@ from api.services.get_salary_by_employee import get_salary_by_employee
 
 def get_current_worksession(employee_id):
     # Step 1: fetch all dailyrecords for an employee
-    daily_records = DailyRecord.objects.filter(employee=employee_id).select_related('site').order_by('created_at')
+    daily_records = DailyRecord.objects.filter(employee=employee_id).select_related('site').order_by('date')
 
     # Validation
     if not daily_records.exists():
         raise ValidationError("No daily records found for this employee.")
+
+    first_record = daily_records.first()
+    # collect last daily_record for snapshot
+    last_record = daily_records.last()
 
     # Step 2: create group based on site
     site_data = defaultdict(lambda: {
@@ -63,14 +67,15 @@ def get_current_worksession(employee_id):
         
     # Step 5:create current_worksession dict
     current_worksession = {
-        "start_date": daily_records.first().created_at.date(),
-        "end_date": daily_records.last().created_at.date(),
+        "start_date": first_record.date,
+        "end_date": last_record.date,
         "total_work": total_work,
         "total_salary": total_salary,
         "total_advance": total_advance,
         "total_khoraki": total_khoraki,
         "last_session_payable": last_session_payable,
         "work_records": work_records,
+        "last_record": last_record,
     }
 
     return current_worksession

@@ -1,6 +1,7 @@
+from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from daily_records.models import DailyRecord, WorkSession, SiteWorkRecord
+from daily_records.models import DailyRecord, WorkSession, SiteWorkRecord, DailyRecordSnapshot
 from users.models import CustomUser
 from api.services.get_current_worksession import get_current_worksession
 
@@ -21,6 +22,8 @@ def create_worksession(emp_id, pay_or_return):
     # Get current worksession
     current_worksession = get_current_worksession(emp_id)
     
+    last_record = current_worksession.pop('last_record')
+    is_same_day = last_record.date == timezone.localdate() # last record date == this_session_creating date
 
     try:
         with transaction.atomic():
@@ -46,6 +49,18 @@ def create_worksession(emp_id, pay_or_return):
                     total_salary=record['total_salary'],
                     khoraki_taken=record['khoraki_taken'],
                     advance_taken=record['advance_taken'],
+                )
+
+            # Step 3: Creating Snapshot of last daily records conditionally
+            if is_same_day:
+                DailyRecordSnapshot.objects.create(
+                    site=last_record.site,
+                    employee=last_record.employee,
+                    date=last_record.date,
+                    present=last_record.present,
+                    khoraki=last_record.khoraki,
+                    advance=last_record.advance,
+                    comment=last_record.comment
                 )
 
             # Step 3: Delete all DailyRecords of this employee

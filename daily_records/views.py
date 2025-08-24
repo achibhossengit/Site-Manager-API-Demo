@@ -179,6 +179,8 @@ class CurrentWorkSession(APIView):
         employee_id = self.kwargs['emp_id']
         current_worksession = get_current_worksession(employee_id)        
 
+        current_worksession.pop('last_record')
+
         return Response(current_worksession)
 
     def post(self, request, *args, **kwargs):

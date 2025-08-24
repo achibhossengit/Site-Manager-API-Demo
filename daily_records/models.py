@@ -8,17 +8,17 @@ from site_profiles.models import PERMISSION_CHOICES
 from site_profiles.validators import validate_today_or_yesterday
 from api.services.get_salary_by_employee import get_salary_by_employee
 
+PRESENT_CHOICES = [
+    (0, 'Absent'),
+    (0.5, 'Half Day'),
+    (1, 'Full Day'),
+    (1.5, '1.5 Day'),
+    (2, '2 Day'),
+    (2.5, '2.5 Day'),
+    (3, '3 Day'),
+]
 
 class DailyRecord(models.Model):
-    PRESENT_CHOICES = [
-        (0, 'Absent'),
-        (0.5, 'Half Day'),
-        (1, 'Full Day'),
-        (1.5, '1.5 Day'),
-        (2, '2 Day'),
-        (2.5, '2.5 Day'),
-        (3, '3 Day'),
-    ]
     
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
@@ -89,3 +89,20 @@ class SiteWorkRecord(models.Model):
 
     def __str__(self):
         return f"Site: {self.site} | Work: {self.work} days"
+    
+    
+class DailyRecordSnapshot(models.Model):
+    """
+    Snapshot of DailyRecord BEFORE deletion — used for today's reporting when original DailyRecord is removed.
+    """
+    site = models.ForeignKey(Site, related_name='daily_record_snapshots', on_delete=models.CASCADE)
+    employee = models.ForeignKey(CustomUser, related_name='daily_record_snapshots', on_delete=models.CASCADE)
+    date = models.DateField()
+    present = models.FloatField(choices=PRESENT_CHOICES, default=0)
+    khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
+    advance = models.PositiveIntegerField(default=0)
+    comment = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Employee: {self.employee} , Site: {self.site} , Date: {self.date}"
