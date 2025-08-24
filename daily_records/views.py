@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import transaction
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
@@ -5,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from daily_records.models import DailyRecord, WorkSession
-from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer
+from daily_records.models import DailyRecord, WorkSession, DailyRecordSnapshot
+from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer, DailyRecordSnapshotSerializer
 from daily_records.permissions import IsAdminOrConditionalPermissionForDailyRecord, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
 from api.services.get_current_worksession import get_current_worksession
 from api.services.create_worksession import create_worksession
@@ -193,3 +194,21 @@ class CurrentWorkSession(APIView):
 
         return Response(result, status=status.HTTP_201_CREATED)
     
+    
+class DailyRecordSnapshotViewset(ModelViewSet):
+    http_method_names = ['get']
+    permission_classes = [IsAuthenticated]
+    queryset = DailyRecordSnapshot.objects.all()
+    serializer_class = DailyRecordSnapshotSerializer
+    filterset_fields = ['site']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.user_type in ['main_manager', 'viewer']:
+            return DailyRecordSnapshot.objects.filter(date=datetime.today())
+        elif user.user_type == 'site_manager':
+            return DailyRecordSnapshot.objects.filter(date=datetime.today(), site = user.current_site)
+        elif user.user_type == 'employee':
+            return DailyRecordSnapshot.objects.filter(date=datetime.today(), employee = user)
+        else:
+            return DailyRecordSnapshot.objects.none()

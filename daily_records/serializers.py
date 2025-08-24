@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
-from daily_records.models import DailyRecord
+from daily_records.models import DailyRecord, DailyRecordSnapshot
 from rest_framework import serializers
 from daily_records.models import WorkSession, SiteWorkRecord
 from users.models import CustomUser
@@ -144,3 +144,9 @@ class WorkSessionPayOrReturnFieldUpdateSerializer(serializers.ModelSerializer):
         instance.update_permission = False
         instance.save(update_fields=['update_permission'])
         return instance
+    
+    
+class DailyRecordSnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyRecordSnapshot
+        fields = '__all__'

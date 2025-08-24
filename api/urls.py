@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
 from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, SiteInfoView, GetSiteTotalByDateView
-from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession
+from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession, DailyRecordSnapshotViewset
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -19,6 +19,7 @@ router.register('site-costs', SiteCostViewSet, basename='site-costs')
 router.register('site-cashes', SiteCashViewSet, basename='site-cashes')
 router.register('site-bills', SiteBillViewSet, basename='site-bills')
 router.register('daily-records', DailyRecordViewSet, basename='daily-records')
+router.register('daily-records-snapshot', DailyRecordSnapshotViewset, basename='daily-records-snapshot')
 router.register('work-sessions', WorkSessionViewSet, basename='work-sessions')
 
 employee_router = NestedDefaultRouter(router, 'users', lookup='user')
