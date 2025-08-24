@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
-from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, SiteInfoView
+from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, SiteInfoView, GetSiteTotalByDateView
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession
 
 from rest_framework_simplejwt.views import (
@@ -28,6 +28,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(employee_router.urls)),
     path('current-worksession/<int:emp_id>/', CurrentWorkSession.as_view(), name='current-work-session'),
+    path('site-total/<int:site_id>/', GetSiteTotalByDateView.as_view(), name='site-total'),
+
 
     path('token/create/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -75,3 +75,8 @@ class SiteProfileAccessPermissions(BasePermission):
         if user.user_type == 'main_manager':
             return True
         return request.method in SAFE_METHODS
+    
+class GetSiteTotalByDateViewPermission(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return user.user_type in ['main_manager', 'site_manager', 'viewer']
