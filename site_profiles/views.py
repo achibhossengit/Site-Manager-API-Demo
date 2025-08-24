@@ -198,18 +198,14 @@ class GetSiteTotalByDateView(APIView):
         response_data = {
             "site": {"id": site.id, "name": str(site)},
             "date": today.isoformat(),
-            "site_cash_total": site_cash_total,
-            "site_cost_total": site_cost_total,
-            "other_cost_total": other_cost_total,
-            "employees": {
-                "present_total": emp_present_total,
-                "khoraki_total": emp_khoraki_total,
-                "advance_total": emp_advance_total,
-            },
-            "work_sessions": {
-                "count": sessions_agg.get('count') or 0,
-                "total_pay_or_return": sessions_agg.get('total_pay_or_return') or 0
-            }
+            "site_cash": site_cash_total,
+            "site_cost": site_cost_total,
+            "other_cost": other_cost_total,
+            "present": emp_present_total,
+            "khoraki": emp_khoraki_total,
+            "advance": emp_advance_total,
+            "session_created": sessions_agg.get('count') or 0,
+            "from_session": sessions_agg.get('total_pay_or_return') or 0
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
