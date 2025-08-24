@@ -12,7 +12,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     
     # Display custom fields in list view
-    list_display = UserAdmin.list_display + ('current_site', 'address')
+    list_display = UserAdmin.list_display + ('current_site', 'user_type')
     
     # Add custom fields to user change form
     fieldsets = UserAdmin.fieldsets + (

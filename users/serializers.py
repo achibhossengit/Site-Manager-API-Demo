@@ -8,7 +8,7 @@ from django.utils.timezone import localtime
 class CustomUserIDsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'first_name', 'last_name']
+        fields = ['id', 'first_name', 'last_name', 'last_session_end_date']
 
 class CustomUserGetSerializer(serializers.ModelSerializer):
     class Meta:

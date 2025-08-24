@@ -21,6 +21,14 @@ class CustomUser(AbstractUser):
     address = models.TextField(max_length=200, blank=True, null=True)
     current_site = models.ForeignKey('site_profiles.Site', on_delete=models.SET_NULL, null=True, related_name='employees')    
 
+    
+    @property
+    def last_session_end_date(self):
+        last_session = self.work_sessions.all().order_by('end_date').last()
+        if last_session:
+            return last_session.end_date
+        return None
+
     def __str__(self):
         return self.username
 
