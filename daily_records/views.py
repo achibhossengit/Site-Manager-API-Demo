@@ -8,33 +8,13 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from daily_records.models import DailyRecord, WorkSession, DailyRecordSnapshot
 from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer, DailyRecordSnapshotSerializer
-from daily_records.permissions import IsAdminOrConditionalPermissionForDailyRecord, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
+from daily_records.permissions import DailyRecordPermission, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
 from api.services.get_current_worksession import get_current_worksession
 from api.services.create_worksession import create_worksession
 
 
-class DailyRecordViewSet(ModelViewSet):
-    """
-    Permissions:
-        - Admins:
-            → Can create, retrieve, update, and delete any daily record.
-        - Main Managers:
-            → Can retrieve (GET) all daily records.
-            → Can update (PUT) only when permission_level == 1.
-            → Can delete (DELETE) only when permission_level == 2.
-            → Cannot create (POST) daily records.
-        - Site Managers:
-            → Can retrieve (GET) daily records for their own site.
-            → Can create (POST) daily records for their employees.
-            → Can partially update (PATCH) permission_level of records in their site.
-        - Viewers:
-            → Can only retrieve (GET) daily records.
-        - Employees:
-            → Can retrieve (GET) only their own daily records.
-            → Cannot create, update, or delete any records.
-    """
-    
-    permission_classes = [IsAuthenticated,  IsAdminOrConditionalPermissionForDailyRecord]
+class DailyRecordViewSet(ModelViewSet):    
+    permission_classes = [IsAuthenticated,  DailyRecordPermission]
     filterset_fields = ['site', 'employee', 'date']
     
     def get_serializer_class(self):
@@ -48,16 +28,10 @@ class DailyRecordViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff or user.user_type in ['main_manager', 'viewer']:
-            return DailyRecord.objects.all().order_by('date')
-        
-        if user.user_type == 'site_manager':
-            return DailyRecord.objects.filter(site=user.current_site).order_by('date')
-
         if user.user_type == 'employee':
             return DailyRecord.objects.filter(employee = user).order_by('date')
         
-        return DailyRecord.objects.none()
+        return DailyRecord.objects.all().order_by('date')
     
     
     @action(detail=False, methods=['post'], url_path='bulk')
@@ -181,6 +155,7 @@ class CurrentWorkSession(APIView):
         current_worksession = get_current_worksession(employee_id)        
 
         current_worksession.pop('last_record')
+        current_worksession.pop('work_records')
 
         return Response(current_worksession)
 
@@ -192,7 +167,7 @@ class CurrentWorkSession(APIView):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response(result, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
     
     
 class DailyRecordSnapshotViewset(ModelViewSet):
