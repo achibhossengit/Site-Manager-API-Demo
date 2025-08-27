@@ -7,7 +7,7 @@ from daily_records.models import WorkSession, SiteWorkRecord
 from users.models import CustomUser
 
 class DailyRecordAccessSerializer(ModelSerializer):
-    today_salary = serializers.IntegerField(read_only=True)
+    # today_salary = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = DailyRecord

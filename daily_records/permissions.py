@@ -4,36 +4,39 @@ from users.models import CustomUser
 class DailyRecordPermission(BasePermission):
     def has_permission(self, request, view):
         user = request.user
+        
         if user.is_staff:
             return True
-        if user.user_type in ['viewer', 'employee']:
-            return request.method in SAFE_METHODS
-        if user.user_type == 'main_manager':
-            return request.method in ['GET', 'PUT', 'DELETE']
-        if user.user_type == 'site_manager':
-            return request.method in SAFE_METHODS or request.method in ['POST', 'PATCH']
-        return False
+            
+        user_permissions = {
+            'viewer': SAFE_METHODS,
+            'employee': SAFE_METHODS,
+            'main_manager': ['GET', 'PUT', 'DELETE'],
+            'site_manager': SAFE_METHODS + ('POST', 'PATCH')
+        }
+        
+        allowed_methods = user_permissions.get(user.user_type, [])
+        return request.method in allowed_methods
 
     def has_object_permission(self, request, view, obj):
         user = request.user
+        
         if user.is_staff:
             return True
-        if user.user_type == 'viewer':
-            return request.method in SAFE_METHODS
+            
+        # Read access for most user types
+        if request.method in SAFE_METHODS:
+            return user.user_type in ['viewer', 'main_manager', 'site_manager', 'employee']
+            
+        # Write access based on user type
         if user.user_type == 'main_manager':
-            if request.method in SAFE_METHODS:
-                return True
-            if obj.permission_level == 1 and request.method == 'PUT':
-                return True
-            if obj.permission_level == 2 and request.method == 'DELETE':
-                return True
-        if user.user_type == 'site_manager':
-            if request.method in SAFE_METHODS:
-                return True
-            if obj.site == user.current_site and request.method in ['POST', 'PATCH']:
-                return True
-        if user.user_type == 'employee':
-            return obj.employee == user and request.method in SAFE_METHODS
+            return ((obj.permission_level == 1 and request.method == 'PUT') or
+                   (obj.permission_level == 2 and request.method == 'DELETE'))
+                   
+        elif user.user_type == 'site_manager':
+            return (obj.site == user.current_site and 
+                   request.method in ['POST', 'PATCH'])
+        
         return False
     
         
