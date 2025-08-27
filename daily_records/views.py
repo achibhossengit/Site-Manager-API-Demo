@@ -1,16 +1,19 @@
 from datetime import datetime
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from daily_records.models import DailyRecord, WorkSession, DailyRecordSnapshot
 from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer, DailyRecordSnapshotSerializer
 from daily_records.permissions import DailyRecordPermission, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
 from api.services.get_current_worksession import get_current_worksession
 from api.services.create_worksession import create_worksession
+from users.models import CustomUser
 
 class DailyRecordViewSet(ModelViewSet):    
     permission_classes = [IsAuthenticated, DailyRecordPermission]
@@ -73,31 +76,8 @@ class DailyRecordViewSet(ModelViewSet):
     
     
 class WorkSessionViewSet(ModelViewSet):
-    """
-    Permissions:
-    1. main_manager:
-        - Can view all WorkSessions.
-        - Can update the `is_paid` field only if `update_permission=True`.
-
-    2. viewer:
-        - Can only view (GET) all WorkSessions.
-        - Cannot perform any updates.
-
-    3. site_manager:
-        - Can view only WorkSessions created by their assigned site.
-        - Can update only the `update_permission` field.
-
-    4. employee:
-        - Can view only their own WorkSessions.
-        - Cannot update anything.
-
-    Methods Allowed:
-        - GET: List or retrieve WorkSessions.
-        - PATCH: Partially update WorkSession (based on update_permission).
-    """
     http_method_names = ['get', 'patch']
     permission_classes = [IsAuthenticated, IsManagerUpdateOrConditionalReadonly]
-    filterset_fields = ['employee']
     
     def get_serializer_class(self):
         if(self.request.method == 'PATCH'):
@@ -105,24 +85,24 @@ class WorkSessionViewSet(ModelViewSet):
                 return WorkSessionPermissionUpdateSerializer
             elif(self.request.user.user_type == 'main_manager'):
                 return WorkSessionPayOrReturnFieldUpdateSerializer
-                
         return WorkSessionSerializer
-        
 
     def get_queryset(self):
         user = self.request.user
-        if user.user_type in ['main_manager', 'viewer']:
-            return WorkSession.objects.all()
-        elif user.user_type == 'site_manager':
-            return WorkSession.objects.filter(site = user.current_site)
-        elif user.user_type == 'employee':
-            return WorkSession.objects.filter(employee = user)
+        employee_id = self.kwargs.get('user_pk')
+        if not employee_id:
+            return WorkSession.objects.none()
+        employee=get_object_or_404(CustomUser,id=employee_id)
         
-        else: return WorkSession.objects.none()
+        if user.user_type == 'employee' and user.id != employee.id:
+            raise PermissionDenied('Employee only can see his own worksessions.')
+        elif user.user_type == 'site_manager' and user.current_site != employee.current_site:
+            raise PermissionDenied('Site Manager only can see his his site employee worksessions.')
+        return WorkSession.objects.filter(employee = employee_id)
         
-        
+    
     @action(detail=False, methods=['get'], url_path='last_session')
-    def last_session(self, request):
+    def last_session(self, request, *args, **kwargs):
         last_session = self.get_queryset().order_by('end_date').last()
 
         if not last_session:

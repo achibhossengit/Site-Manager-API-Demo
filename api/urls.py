@@ -15,19 +15,23 @@ router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='users')
 router.register('sites', SiteViewSet, basename='sites')
 router.register('sites-info', SiteInfoView, basename='sites-info')
-router.register('site-costs', SiteCostViewSet, basename='site-costs')
-router.register('site-cashes', SiteCashViewSet, basename='site-cashes')
-router.register('site-bills', SiteBillViewSet, basename='site-bills')
 router.register('daily-records', DailyRecordViewSet, basename='daily-records')
 router.register('daily-records-snapshot', DailyRecordSnapshotViewset, basename='daily-records-snapshot')
-router.register('work-sessions', WorkSessionViewSet, basename='work-sessions')
 
 employee_router = NestedDefaultRouter(router, 'users', lookup='user')
 employee_router.register('promotions', PromotionViewSet, basename='employee-promotions')
+employee_router.register('work-sessions', WorkSessionViewSet, basename='work-sessions')
+
+
+site_router = NestedDefaultRouter(router, 'sites', lookup='site')
+site_router.register('cost-records', SiteCostViewSet, basename='cost-records')
+site_router.register('cash-records', SiteCashViewSet, basename='cash-records')
+site_router.register('bill-records', SiteBillViewSet, basename='bill-records')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(employee_router.urls)),
+    path('', include(site_router.urls)),
     path('current-worksession/<int:emp_id>/', CurrentWorkSession.as_view(), name='current-work-session'),
     path('site-total/<int:site_id>/', GetSiteTotalByDateView.as_view(), name='site-total'),
 

@@ -55,19 +55,12 @@ class SiteSerializerForManager(ModelSerializer):
             }
         return None
 
-        
-        
-        
+# serializers for SiteCost model
 class SiteCostSerializer(ModelSerializer):
     class Meta:
         model = SiteCost
         fields = '__all__'
         read_only_fields = ['site', 'permission_level']
-        
-    def create(self, validated_data):
-        request = self.context.get('request')
-        validated_data['site'] = request.user.current_site
-        return super().create(validated_data)
     
     def update(self, instance, validated_data):
         instance.permission_level = 0
@@ -86,13 +79,6 @@ class SiteCashSerializer(ModelSerializer):
         model = SiteCash
         fields = '__all__'
         read_only_fields = ['site', 'permission_level']
-        
-    def create(self, validated_data):
-        request = self.context.get('request')
-        if not hasattr(request.user, 'current_site'):
-            raise serializers.ValidationError("User has no current_site assigned.")
-        validated_data['site'] = request.user.current_site
-        return super().create(validated_data)
     
     def update(self, instance, validated_data):
         instance.permission_level = 0
@@ -109,3 +95,8 @@ class SiteBillSerializer(ModelSerializer):
     class Meta:
         model = SiteBill
         fields = '__all__'
+
+class SiteBillCreateSerializer(ModelSerializer):
+    class Meta:
+        model = SiteBill
+        exclude = ['site']
