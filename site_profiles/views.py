@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
-from site_profiles.serializers import SiteSerializer, SiteSerializerForViewer, SiteSerializerForManager,SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer, SiteBillCreateSerializer
+from site_profiles.serializers import SiteSerializer, SiteSerializerForViewer, SiteSerializerForManager,SiteCostSerializer, SiteCostUpdatePermissionSerializer, SiteCashSerializer, SiteCashUpdatePermissionSerializer, SiteBillSerializer
 from site_profiles.permissions import SiteRecordAccessPermission, SiteBillAccessPermission, SiteProfileAccessPermissions, GetSiteTotalByDateViewPermission
 from daily_records.models import DailyRecord, WorkSession, DailyRecordSnapshot
 from api.filters import SiteCostFilterClass, SiteCashFilterClass, SiteBillFilterClass
@@ -95,12 +95,8 @@ class SiteCashViewSet(ModelViewSet):
 class SiteBillViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, SiteBillAccessPermission]
     filterset_class = SiteBillFilterClass
-    
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return SiteBillCreateSerializer
-        return SiteBillSerializer
-    
+    serializer_class = SiteBillSerializer
+        
     def get_queryset(self):
         site_id = self.kwargs.get('site_pk')
         if not site_id:

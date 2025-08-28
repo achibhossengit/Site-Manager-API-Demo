@@ -94,9 +94,4 @@ class SiteCashUpdatePermissionSerializer(ModelSerializer):
 class SiteBillSerializer(ModelSerializer):
     class Meta:
         model = SiteBill
-        fields = '__all__'
-
-class SiteBillCreateSerializer(ModelSerializer):
-    class Meta:
-        model = SiteBill
         exclude = ['site']
