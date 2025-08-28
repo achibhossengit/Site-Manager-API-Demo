@@ -17,7 +17,7 @@ from users.models import CustomUser
 
 class DailyRecordViewSet(ModelViewSet):    
     permission_classes = [IsAuthenticated, DailyRecordPermission]
-    filterset_fields = ['site', 'employee', 'date']
+    filterset_fields = ['site', 'employee__current_site', 'date', 'employee']
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -31,24 +31,12 @@ class DailyRecordViewSet(ModelViewSet):
         
         if user.user_type == 'employee':
             return DailyRecord.objects.filter(employee=user).order_by('date')
+        elif user.user_type == 'site_manager':
+            # fetch his site labours records only
+            return DailyRecord.objects.filter(employee__current_site=user.current_site).order_by('date')
+        elif user.user_type in ['main_manager', 'viewer']:
+            return DailyRecord.objects.all().order_by('date')            
         return None
-
-    @action(detail=False, methods=['get'], url_path=r'by_employees/(?P<site_id>\d+)/(?P<date>\d{4}-\d{2}-\d{2})')
-    def by_employees(self, request, site_id=None, date=None):
-        user = request.user
-        if not (user.user_type in ['main_manager', 'viewer', 'site_manager'] and 
-                (user.user_type != 'site_manager' or str(user.current_site.id) == site_id)):
-            return Response({'error': 'Permission denied.'}, status=403)
-        
-        try:
-            filter_date = datetime.strptime(date, "%Y-%m-%d").date()
-        except ValueError:
-            return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
-
-        result = DailyRecord.objects.filter( date=filter_date, employee__current_site=site_id).select_related('employee', 'site')
-
-        serializer = DailyRecordAccessSerializer(result, many=True)
-        return Response(serializer.data)
     
     @action(detail=False, methods=['post'], url_path='bulk')
     def bulk(self, request):
@@ -180,17 +168,3 @@ class DailyRecordSnapshotViewset(ModelViewSet):
             return DailyRecordSnapshot.objects.filter(date=datetime.today(), employee = user)
         else:
             return DailyRecordSnapshot.objects.none()
-        
-        
-        
-        
-"""
-employees = users.objects.filter(site=1)
-daily_records = []
-
-for (employee in employees){
-    emp_daily_records = DailyRecords.filter(emp=employee.id)
-    daily_records+=emp_daily_records
-}
-
-"""
