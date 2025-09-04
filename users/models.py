@@ -30,7 +30,7 @@ class CustomUser(AbstractUser):
         return None
 
     def __str__(self):
-        return self.username
+        return self.first_name
 
 class Promotion(models.Model):
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='promotions')
@@ -46,4 +46,4 @@ class Promotion(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.employee.username} - {self.date}"
+        return f"{self.employee.first_name} - {self.date}"

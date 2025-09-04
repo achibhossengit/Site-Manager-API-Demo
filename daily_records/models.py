@@ -42,7 +42,7 @@ class DailyRecord(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.employee} - {self.date}"
+        return f"{self.employee.first_name} - {self.date}"
 
 
 class WorkSession(models.Model):
