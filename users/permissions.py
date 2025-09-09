@@ -12,8 +12,8 @@ class CustomUserPermission(BasePermission):
             return request.user.user_type in ['main_manager', 'site_manager']
         elif request.method == 'PATCH':
             return request.user.user_type in ['viewer', 'main_manager']
-        elif request.method == 'DELETE':
-            return request.user.user_type == 'main_manager'
+        # elif request.method == 'DELETE':
+        #     return request.user.user_type == 'main_manager'
         
         return request.method in SAFE_METHODS
 

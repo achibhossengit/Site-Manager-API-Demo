@@ -1,8 +1,7 @@
 from django.shortcuts import get_object_or_404
-from django.db import transaction, IntegrityError
 from rest_framework import serializers
 from users.models import CustomUser, Promotion
-from daily_records.models import DailyRecord, WorkSession
+from daily_records.models import WorkSession
 from django.utils.timezone import localtime
 
 class CustomUserIDsSerializer(serializers.ModelSerializer):
@@ -40,6 +39,14 @@ class UpdateCurrentSiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['current_site']
+ 
+    def validate(self, attrs):
+        user = self.instance
+        if user.user_type == 'site_manager':
+            raise serializers.ValidationError({
+                'current_site': f'{user.first_name} সাইট ম্যানেজার, তাই তার বর্তমান সাইট পরিবর্তন করা যাবে না।'
+            })
+        return super().validate(attrs)
 
 class UpdateUserTypeSerializer(serializers.ModelSerializer):
     class Meta:
