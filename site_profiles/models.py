@@ -2,7 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
 from django.db.models import Sum, F
-from site_profiles.validators import validate_today_or_yesterday, validate_not_future_date
 from users.models import Promotion
 from api.services.get_salary import get_salary
 
@@ -123,7 +122,7 @@ class Site(models.Model):
     
 class SiteCost(models.Model):
     site = models.ForeignKey(Site, related_name='site_costs', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
+    date = models.DateField(default=date.today)
     title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     type = models.CharField(choices=COST_TYPE_CHOICES, default='st')
@@ -136,7 +135,7 @@ class SiteCost(models.Model):
 
 class SiteCash(models.Model):
     site = models.ForeignKey(Site, related_name='site_cashes', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
+    date = models.DateField(default=date.today)
     title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
@@ -150,7 +149,7 @@ class SiteCash(models.Model):
     
 class SiteBill(models.Model):
     site = models.ForeignKey(Site, related_name='site_bills', on_delete=models.CASCADE)
-    date = models.DateField(default=date.today, validators=[validate_not_future_date])
+    date = models.DateField(default=date.today)
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)

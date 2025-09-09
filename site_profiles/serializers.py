@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
+from api.validators import validate_today_or_yesterday
 
 class SiteSerializer(ModelSerializer):
     class Meta:
@@ -61,6 +62,11 @@ class SiteCostSerializer(ModelSerializer):
         model = SiteCost
         fields = '__all__'
         read_only_fields = ['site', 'permission_level']
+        
+    def validate_date(self, value):
+        if not validate_today_or_yesterday(value):
+            raise serializers.ValidationError({"date": "শুধু আজ বা গতকালের তারিখই অনুমোদিত।"})
+        return value
     
     def update(self, instance, validated_data):
         instance.permission_level = 0
@@ -79,6 +85,11 @@ class SiteCashSerializer(ModelSerializer):
         model = SiteCash
         fields = '__all__'
         read_only_fields = ['site', 'permission_level']
+
+    def validate_date(self, value):
+        if not validate_today_or_yesterday(value):
+            raise serializers.ValidationError({"date": "শুধু আজ বা গতকালের তারিখই অনুমোদিত।"})
+        return value
     
     def update(self, instance, validated_data):
         instance.permission_level = 0
