@@ -1,10 +1,8 @@
-from datetime import datetime
-from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 from daily_records.models import DailyRecord, DailyRecordSnapshot
 from rest_framework import serializers
 from daily_records.models import WorkSession, SiteWorkRecord
-from users.models import CustomUser
+from api.validators import to_date, validate_today_or_yesterday
 
 class DailyRecordAccessSerializer(ModelSerializer):
     # today_salary = serializers.IntegerField(read_only=True)
@@ -23,59 +21,69 @@ class DailyRecordCreateSerializer(serializers.ModelSerializer):
         model = DailyRecord
         fields = '__all__'
         read_only_fields = ['site', 'permission_level']
-
-    def _validate_employee_date(self, employee_obj, record_date):
-        # Ensure record_date is a date object
-        if isinstance(record_date, str):
-            record_date = timezone.datetime.strptime(record_date, "%Y-%m-%d").date()
-        elif isinstance(record_date, timezone.datetime):
-            record_date = record_date.date()
-
-        # 1. date can't be before date_joined
-        date_joined_local = timezone.localtime(employee_obj.date_joined).date()
-        if record_date < date_joined_local:
-            raise serializers.ValidationError(
-                f"({employee_obj.username}) এর যোগদানের তারিখ ({date_joined_local}) এর আগে হাজিরা যোগ করা সম্ভব নয়।"
-                )
-            
-        # 2. date can't be equal or before last WorkSession end_date
-        last_session = WorkSession.objects.filter(employee=employee_obj).order_by('end_date').last()
-        if last_session:
-            last_end_date = last_session.end_date
-            if isinstance(last_end_date, timezone.datetime):
-                last_end_date = last_end_date.date()
-            if record_date <= last_end_date:
-                raise serializers.ValidationError(
-                    f"({employee_obj.username}) এর সর্বশেষ হিসাব দেওয়া হয়েছে ({last_end_date}) তারিখে। একই দিনে দুইবার হাজিরা যোগ করা যাবে না।"
-                )
-
-        return record_date
-
-    def validate_date(self, value):
-        # Bulk creation
-        if isinstance(self.initial_data, list):
-            for record in self.initial_data:
-                employee_id = record.get('employee')
-                record_date = record.get('date')
-                if not employee_id or not record_date:
-                    continue
-
-                employee_obj = CustomUser.objects.get(pk=employee_id)
-                self._validate_employee_date(employee_obj, record_date)
-
-        else:
-            # Single creation
-            employee_id = self.initial_data.get('employee')
-            if employee_id:
-                employee_obj = CustomUser.objects.get(pk=employee_id)
-                self._validate_employee_date(employee_obj, value)
-
-        return value
-
+        
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['site'] = request.user.current_site
         return super().create(validated_data)
+    
+
+    def _date_validations(self, employee_obj, record_date):
+        # ensure convertible to date and catch parse errors
+        try:
+            record_date = to_date(record_date)
+        except (ValueError, TypeError):
+            raise serializers.ValidationError({ "date": "তারিখের ফরম্যাট সঠিক নয় — YYYY-MM-DD ফরম্যাট ব্যবহার করুন।"})
+
+        # 1. date can't be before date_joined
+        try:
+            date_joined_local = to_date(employee_obj.date_joined)
+        except AttributeError:
+            raise serializers.ValidationError(
+                f"{employee_obj.first_name} -এর যোগদানের তারিখ পাওয়া যায়নি — কর্মচারীর প্রোফাইল আপডেট করুন।")
+        except (ValueError, TypeError):
+            raise serializers.ValidationError(
+                f"({getattr(employee_obj, 'first_name', 'কর্মচারী')})-এর যোগদানের তারিখের ফরম্যাট ভুল আছে।"
+            )
+        if record_date < date_joined_local:
+            raise serializers.ValidationError({"employee":
+                f"({employee_obj.first_name}) এর যোগদানের তারিখ ({date_joined_local}) এর আগে হাজিরা যোগ করা সম্ভব নয়।"
+                })
+
+        # 2. Check today or yesterday
+        if not validate_today_or_yesterday(record_date):
+            raise serializers.ValidationError({"date": "শুধু আজ বা গতকালের তারিখই অনুমোদিত।"})
+
+        # 3. date can't be equal or before last WorkSession end_date
+        last_session = WorkSession.objects.filter(employee=employee_obj).order_by('end_date').last()
+        if last_session:
+            try:
+                last_end_date = to_date(last_session.end_date)
+            except (ValueError, TypeError):
+                raise serializers.ValidationError({
+                    "date": f"{employee_obj.first_name} -এর পূর্বের সেশন এর তারিখে সমস্যা আছে। অনুগ্রহ করে সিস্টেম অ্যাডমিনিস্ট্রেটরের সাথে যোগাযোগ করুন।"})
+
+            if record_date <= last_end_date:
+                raise serializers.ValidationError({
+                    "date": f"({employee_obj.first_name}) এর সর্বশেষ হিসাব দেওয়া হয়েছে ({last_end_date}) তারিখে। একই দিনে দুইবার হাজিরা যোগ করা যাবে না।"})
+
+        return record_date
+       
+    def _employee_validation(self, employee_obj, request_user):
+        if request_user.current_site.id != employee_obj.current_site.id:
+            raise serializers.ValidationError({
+                "employee": f"{employee_obj.first_name} আপনার সাইটের অন্তর্ভুক্ত নয়।"
+            })
+        return employee_obj
+
+    def validate(self, attrs):
+        request_user = self.context.get("request").user
+        employee_obj = attrs['employee']
+        
+        attrs['employee'] = self._employee_validation(employee_obj, request_user)
+        attrs['date'] = self._date_validations(employee_obj, attrs['date'])
+        return attrs
+    
 
     
 class DailyRecordUpdatePermissionSerializer(ModelSerializer):
@@ -83,7 +91,6 @@ class DailyRecordUpdatePermissionSerializer(ModelSerializer):
         model = DailyRecord
         fields = ['permission_level']
         
-
 
 class SiteWorkRecordSerializer(ModelSerializer):
     site = serializers.CharField(source='site.name', read_only=True)

@@ -38,29 +38,24 @@ class DailyRecordViewSet(ModelViewSet):
             return DailyRecord.objects.all().order_by('date')            
         return None
     
-    @action(detail=False, methods=['post'], url_path='bulk')
-    def bulk(self, request):
-        
-        records = request.data.get('records')
-        record_date = request.data.get('date')
-        if not isinstance(records, list) or not record_date:
-            return Response(
-                {"detail": "Need records and record_date both"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        site = request.user.current_site
-        for item in records:
-            item["site"] = site
-            item["date"] = record_date
-
-        serializer = self.get_serializer(data=records, many=True)
+    def create(self, request, *args, **kwargs):
+        is_many = isinstance(request.data, list)
+        serializer = self.get_serializer(data=request.data, many=is_many)
         serializer.is_valid(raise_exception=True)
 
-        with transaction.atomic():
-            serializer.save()
+        site = getattr(request.user, "current_site", None)
+        if not site:
+            return Response({"detail": "আপনার জন্য কোনো সাইট সেট করা হয়নি।"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        records = []
+        for item in (serializer.validated_data if is_many else [serializer.validated_data]):
+            item["site"] = site
+            records.append(DailyRecord(**item))
+
+        with transaction.atomic():
+            DailyRecord.objects.bulk_create(records)
+
+        return Response({"created": len(records)}, status=status.HTTP_201_CREATED)
     
     
 class WorkSessionViewSet(ModelViewSet):

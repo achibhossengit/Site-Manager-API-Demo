@@ -2,10 +2,8 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from users.models import CustomUser
 from site_profiles.models import Site
-from datetime import date
 from django.core.validators import MaxValueValidator
 from site_profiles.models import PERMISSION_CHOICES
-from site_profiles.validators import validate_today_or_yesterday
 from api.services.get_salary_by_employee import get_salary_by_employee
 
 PRESENT_CHOICES = [
@@ -22,7 +20,7 @@ class DailyRecord(models.Model):
     
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
-    date = models.DateField(default=date.today, validators=[validate_today_or_yesterday])
+    date = models.DateField()
     present = models.FloatField(choices=PRESENT_CHOICES, default=0)
     khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
     advance = models.PositiveIntegerField(default=0)
@@ -30,7 +28,6 @@ class DailyRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
-
 
     @property
     def today_salary(self):
