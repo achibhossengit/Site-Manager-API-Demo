@@ -3,7 +3,10 @@ from django.contrib.auth.admin import UserAdmin
 from users.models import CustomUser, Promotion
 
 # Register Promotion model
-admin.site.register(Promotion)
+@admin.register(Promotion)
+class PromotionAdmin(admin.ModelAdmin):
+    list_display = ['created_at', 'date', 'employee', 'current_salary']
+    list_filter = ['created_at', 'employee']
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -12,7 +15,8 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     
     # Display custom fields in list view
-    list_display = UserAdmin.list_display + ('current_site', 'user_type')
+    list_display = ['username', 'first_name', 'last_name', 'current_site', 'user_type', 'is_staff']
+    list_filter = ['current_site', 'user_type', 'is_staff', 'is_active']
     
     # Add custom fields to user change form
     fieldsets = UserAdmin.fieldsets + (
