@@ -65,7 +65,7 @@ class WorkSession(models.Model):
         return (self.this_session_payable + self.last_session_payable) - self.pay_or_return
 
     def __str__(self):
-        return f"{self.employee.username} | {self.start_date} - {self.end_date}"
+        return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_at}"
         
 
 class SiteWorkRecord(models.Model):
@@ -102,4 +102,4 @@ class DailyRecordSnapshot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Employee: {self.employee} , Site: {self.site} , Date: {self.date}"
+        return f"Employee: {self.employee.first_name + "" + self.employee.last_name} | {self.site} | {self.date}"
