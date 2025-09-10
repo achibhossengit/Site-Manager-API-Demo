@@ -5,7 +5,7 @@ from daily_records.models import DailyRecord, WorkSession, SiteWorkRecord, Daily
 @admin.register(DailyRecord)
 class DailyRecordAdmin(admin.ModelAdmin):
     list_display = ['date', 'employee', 'site',] 
-    list_filter = ['date', 'site'] 
+    list_filter = ['date', 'site', 'employee']
     ordering = ['-date']
 
 @admin.register(WorkSession)
