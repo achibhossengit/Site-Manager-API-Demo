@@ -87,24 +87,43 @@ class ChangePasswordView(APIView):
 class ResetPasswordView(APIView):
     def post(self, request):
         email = request.data.get('email')
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return Response({'detail': 'User with this email does not exist.'}, status=404)
+        if not email:
+            return Response({"code": "missing_email"}, status=status.HTTP_400_BAD_REQUEST)
 
+        users = CustomUser.objects.filter(email=email)
+
+        if not users.exists():
+            return Response({"code": "user_not_found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if users.count() > 1:
+            return Response({"code": "multiple_users_found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = users.first()
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        front_end_domain = settings.FRONTEND_URL
-        reset_link = f"{front_end_domain}/reset-password/{uid}/{token}/"
+        reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
 
-        send_mail(
-            subject="Reset your password",
-            message=f"Click this link to reset your password:\n{reset_link}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-        )
+        try:
+            send_mail(
+                subject = "🔐 Reset Your Password – Fatema Construction",
+                message = f"""
+            Hello,
+            To reset your password, please click the link below:
+            {reset_link}
+            This link will expire in 24 hours for your security. If you did not request a password reset, you can safely ignore this email—your account will remain unchanged.
 
-        return Response({'detail': 'Password reset link sent to your email.'}, status=200)
+            © Fatema Construction. All rights reserved.
+            Developed by Achib Hossen
+                """,
+
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+            )
+        except Exception as e:
+            print(f"Email sending failed for {email}: {str(e)}")
+            return Response({"code": "email_send_failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({"code": "reset_link_sent"}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordConfirmView(APIView):
