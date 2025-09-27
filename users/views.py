@@ -118,6 +118,7 @@ class ResetPasswordView(APIView):
 
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
+                fail_silently=settings.FAIL_SILENTLY
             )
         except Exception as e:
             print(f"Email sending failed for {email}: {str(e)}")
