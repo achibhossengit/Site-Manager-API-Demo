@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Count, Value, F
 from django.db.models.functions import Coalesce
@@ -152,11 +153,17 @@ class GetSiteTotalByDateView(APIView):
         emp_advance_total = advance_from_dailyRecord + advance_from_dailyRecordSnapshot
 
         # work sessions (count int, pay_or_return is IntegerField)
-        sessions_agg = WorkSession.objects.filter(site=site, start_date__lte=today, end_date__gte=today) \
-            .aggregate(
-                count=Coalesce(Count('id'), Value(0, output_field=IntegerField())),
-                total_pay_or_return=Coalesce(Sum('pay_or_return'), Value(0, output_field=IntegerField()))
-            )
+        start_of_day = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+        end_of_day = timezone.make_aware(datetime.combine(today + timedelta(days=1), datetime.min.time()))
+
+        sessions_agg = WorkSession.objects.filter(
+            site=site,
+            created_at__gte=start_of_day,
+            created_at__lt=end_of_day
+        ).aggregate(
+            count=Coalesce(Count('id'), Value(0, output_field=IntegerField())),
+            total_pay_or_return=Coalesce(Sum('pay_or_return'), Value(0, output_field=IntegerField()))
+        )
 
         response_data = {
             "site": {"id": site.id, "name": str(site)},
