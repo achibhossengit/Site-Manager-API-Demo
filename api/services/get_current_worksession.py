@@ -1,4 +1,3 @@
-from rest_framework.exceptions import ValidationError
 from collections import defaultdict
 from daily_records.models import DailyRecord, WorkSession
 from api.services.get_salary_by_employee import get_salary_by_employee
@@ -9,7 +8,7 @@ def get_current_worksession(employee_id):
 
     # Validation
     if not daily_records.exists():
-        raise ValidationError("No daily records found for this employee.")
+        return None
 
     first_record = daily_records.first()
     # collect last daily_record for snapshot

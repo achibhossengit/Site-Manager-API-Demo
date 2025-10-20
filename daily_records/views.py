@@ -128,7 +128,10 @@ class CurrentWorkSession(APIView):
     
     def get(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
-        current_worksession = get_current_worksession(employee_id)        
+        current_worksession = get_current_worksession(employee_id)
+
+        if not current_worksession:
+            return Response({})
 
         current_worksession.pop('last_record')
         current_worksession.pop('work_records')

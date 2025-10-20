@@ -10,8 +10,12 @@ def create_worksession(emp_id, pay_or_return):
     if not employee.current_site_id:
         raise ValidationError(f"Current_site is not set yet for employee: {employee}!")
 
-    employee_current_site = employee.current_site_id
     current_worksession = get_current_worksession(emp_id)
+
+    if current_worksession is None:
+        raise ValidationError("No current work session found for this employee.")
+    
+    employee_current_site = employee.current_site_id
     last_record = current_worksession.pop('last_record')
     is_same_day = last_record.date == timezone.localdate() # last record date == this_session_creating date
 
