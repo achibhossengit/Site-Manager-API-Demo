@@ -87,43 +87,13 @@ class WorkSessionViewSet(ModelViewSet):
     @action(detail=False, methods=['get'], url_path='last_session')
     def last_session(self, request, *args, **kwargs):
         last_session = self.get_queryset().order_by('end_date').last()
-
-        if not last_session:
-            return Response(
-                {"detail": "কোনো কাজের সেশন পাওয়া যায়নি।"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
+        
         serializer = self.get_serializer(last_session)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
         
         
 class CurrentWorkSession(APIView):
-    """
-    Permissions:
-    GET:
-    1. main_manager:
-        - Can retrieve current WorkSession for any employee.
-
-    2. viewer:
-        - Can retrieve current WorkSession for any employee.
-
-    3. site_manager:
-        - Can retrieve current WorkSession of their own site employees only.
-
-    4. employee:
-        - Can only retrieve their own current WorkSession.
-
-    POST:
-    1. site_manager:
-        - Can create a new WorkSession for their own site employees only.
-        - Other user types are not allowed to create WorkSessions.
-
-    Methods Allowed:
-        - GET: Return calculated current work session data for a given employee.
-        - POST: Create a new WorkSession with calculated data.
-    """
     permission_classes = [IsAuthenticated, CurrentWorkSessionPermission]
     
     def get(self, request, *args, **kwargs):

@@ -93,8 +93,6 @@ class DailyRecordUpdatePermissionSerializer(ModelSerializer):
         
 
 class SiteWorkRecordSerializer(ModelSerializer):
-    site = serializers.CharField(source='site.name', read_only=True)
-
     class Meta:
         model = SiteWorkRecord
         fields = [
@@ -110,17 +108,14 @@ class SiteWorkRecordSerializer(ModelSerializer):
         
 
 class WorkSessionSerializer(serializers.ModelSerializer):
-    site_name = serializers.CharField(source='site.name', read_only=True)
-    employee_username = serializers.CharField(source='employee.username', read_only=True)
     site_records = SiteWorkRecordSerializer(source='records', many=True, read_only=True)
     
     class Meta:
         model = WorkSession
         fields = [
             'id',
-            'site_name',
+            'site',
             'employee',
-            'employee_username',
             'start_date',
             'end_date',
             'update_permission',
