@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
 from daily_records.models import WorkSession
-from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer
+from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer, CustomUserGetDetailSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
@@ -47,11 +47,13 @@ class CustomUserViewSet(ModelViewSet):
                 return UpdateUserTypeSerializer
             return UpdateCurrentSiteSerializer
         # for get, head etc
-        return CustomUserGetSerializer
+        if self.action == 'list':
+            return CustomUserGetSerializer
+        return CustomUserGetDetailSerializer
     
     @action(detail=False, methods=['get'], url_path='me')
     def me(self, request):
-        serializer = CustomUserGetSerializer(request.user)
+        serializer = CustomUserGetDetailSerializer(request.user)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='ids')

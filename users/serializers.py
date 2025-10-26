@@ -12,6 +12,11 @@ class CustomUserIDsSerializer(serializers.ModelSerializer):
 class CustomUserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
+        fields = ['id', 'first_name', 'last_name', 'current_site', 'designation']
+
+class CustomUserGetDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
         fields = '__all__'
 
 class CustomUserCreateSerializer(serializers.ModelSerializer):

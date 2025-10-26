@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator
-from django.db.models import Sum
-from api.services.get_salary import get_salary
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = [
@@ -14,6 +12,7 @@ class CustomUser(AbstractUser):
     DESIGNATION_CHOICES = [
         ('4MAN', 'ফোর ম্যান'),
         ('MISTRI', 'মিস্ত্রি'),
+        ('RAJMISTRI', 'রাজ মিস্ত্রি'),
         ('HELPER', 'হেল্পার'),
     ]
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default= 'employee')
