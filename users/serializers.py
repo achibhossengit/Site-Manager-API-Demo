@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from users.models import CustomUser, Promotion
-from daily_records.models import WorkSession
+from daily_records.models import WorkSession, DailyRecord
 from django.utils.timezone import localtime
 
 class CustomUserIDsSerializer(serializers.ModelSerializer):
@@ -49,9 +49,16 @@ class UpdateCurrentSiteSerializer(serializers.ModelSerializer):
         user = self.instance
         if user.user_type == 'site_manager':
             raise serializers.ValidationError({
-                'current_site': f'{user.first_name} সাইট ম্যানেজার, তাই তার বর্তমান সাইট পরিবর্তন করা যাবে না।'
+                'current_site': f'{user.first_name} একজন সাইট ম্যানেজার, তাই তার বর্তমান সাইট পরিবর্তন করা যাবে না।'
             })
         return super().validate(attrs)
+    
+    def update(self, instance, validated_data):
+        # if not found any updated current_site set existing one to avoid error
+        new_current_site = validated_data.get('current_site', instance.current_site)
+        instance.current_site = new_current_site
+        instance.save()
+        return instance
 
 class UpdateUserTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,7 +67,7 @@ class UpdateUserTypeSerializer(serializers.ModelSerializer):
 
     # check which field gona change
     def update(self, instance, validated_data):
-        new_user_type = validated_data.get('user_type')
+        new_user_type = validated_data.get('user_type', instance.user_type)
 
         if new_user_type == 'site_manager' and instance.current_site:
             site = instance.current_site
@@ -79,7 +86,33 @@ class UpdateUserTypeSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class UserActivationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['is_active']
+        
+        
+    def validate(self, attrs):
+        user = self.instance
+        has_daily_records = DailyRecord.objects.filter(employee = user).exists()
 
+        if user.user_type in ['main_manager', 'site_manager', 'viewer']:
+            raise serializers.ValidationError({
+                'current_site': f'{user.first_name} একজন ম্যানেজার/ঠিকাদার, তাই তার অ্যাক্টিভ স্ট্যাটাস পরিবর্তন করা যাবে না।'
+            })
+        if has_daily_records:
+            raise serializers.ValidationError({
+                'current_site': f'{user.first_name} এর চলমান হিসাব পাওয়া গেছে, তাই তার অ্যাক্টিভ স্ট্যাটাস পরিবর্তন করা যাবে না।'
+            })
+        return super().validate(attrs)
+    
+    def update(self, instance, validated_data):
+        # if not found any updated "is_active" set existing one to avoid error
+        new_active_status = validated_data.get('is_active', instance.is_active)
+        instance.is_active = new_active_status
+        instance.save()
+        return instance
+    
 
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:

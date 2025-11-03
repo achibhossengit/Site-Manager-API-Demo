@@ -11,7 +11,7 @@ class CustomUserPermission(BasePermission):
         if request.method in ['PUT']:
             return request.user.user_type in ['main_manager', 'site_manager']
         elif request.method == 'PATCH':
-            return request.user.user_type in ['viewer', 'main_manager']
+            return request.user.user_type in ['viewer', 'main_manager', 'site_manager']
         # elif request.method == 'DELETE':
         #     return request.user.user_type == 'main_manager'
         

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.models import CustomUser, Promotion
 from daily_records.models import WorkSession
-from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer, CustomUserGetDetailSerializer
+from users.serializers import PromotionSerializer, PromotionCreateSerializer,PromotionUpdateSerializer, CustomUserGetSerializer, CustomUserCreateSerializer, CustomUserIDsSerializer, CustomUserUpdateBioSerializer, UpdateUserTypeSerializer, UpdateCurrentSiteSerializer, CustomUserGetDetailSerializer, UserActivationSerializer
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
@@ -43,9 +43,13 @@ class CustomUserViewSet(ModelViewSet):
         elif self.request.method == 'PUT':
             return CustomUserUpdateBioSerializer
         elif self.request.method == 'PATCH':
-            if self.request.user.user_type == 'viewer':
+            user_type = self.request.user.user_type
+            if user_type == 'viewer':
                 return UpdateUserTypeSerializer
-            return UpdateCurrentSiteSerializer
+            elif user_type == 'main_manager':
+                return UpdateCurrentSiteSerializer
+            elif user_type == 'site_manager':
+                return UserActivationSerializer
         # for get, head etc
         if self.action == 'list':
             return CustomUserGetSerializer
