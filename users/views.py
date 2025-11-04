@@ -19,7 +19,7 @@ from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, CustomUserPermission]
-    filterset_fields = ['current_site', 'designation']    
+    filterset_fields = ['current_site', 'designation', 'is_active']
 
     def get_queryset(self):
         user = self.request.user

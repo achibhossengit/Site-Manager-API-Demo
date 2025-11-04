@@ -74,6 +74,10 @@ class DailyRecordCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "employee": f"{employee_obj.first_name} আপনার সাইটের অন্তর্ভুক্ত নয়।"
             })
+        if employee_obj.is_active == False:
+            raise serializers.ValidationError({
+                "employee": f"{employee_obj.first_name} একজন inactive ইউজার।"
+            })
         return employee_obj
 
     def validate(self, attrs):
