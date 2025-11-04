@@ -3,6 +3,7 @@ from rest_framework import serializers
 from users.models import CustomUser, Promotion
 from daily_records.models import WorkSession, DailyRecord
 from django.utils.timezone import localtime
+from users.exceptions import ForbiddenActiveStatusChange
 
 class CustomUserIDsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,25 +91,22 @@ class UserActivationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['is_active']
-        
-        
-    def validate(self, attrs):
-        user = self.instance
-        has_daily_records = DailyRecord.objects.filter(employee = user).exists()
-
-        if user.user_type in ['main_manager', 'site_manager', 'viewer']:
-            raise serializers.ValidationError({
-                'current_site': f'{user.first_name} একজন ম্যানেজার/ঠিকাদার, তাই তার অ্যাক্টিভ স্ট্যাটাস পরিবর্তন করা যাবে না।'
-            })
-        if has_daily_records:
-            raise serializers.ValidationError({
-                'current_site': f'{user.first_name} এর চলমান হিসাব পাওয়া গেছে, তাই তার অ্যাক্টিভ স্ট্যাটাস পরিবর্তন করা যাবে না।'
-            })
-        return super().validate(attrs)
     
     def update(self, instance, validated_data):
+        user = self.instance
+        has_daily_records = DailyRecord.objects.filter(employee = user).exists()
+        current_active_status = instance.is_active
+        
+        # If the user is already inactive, they can be reactivated at any time.
+        # However, if the user is currently active and a deactivation is attempted, the second condition must be checked.
+        if current_active_status:    
+            if user.user_type in ['main_manager', 'site_manager', 'viewer']:
+                raise ForbiddenActiveStatusChange("manager_or_viewer")
+            if has_daily_records:
+                raise ForbiddenActiveStatusChange("has_daily_records")
+        
         # if not found any updated "is_active" set existing one to avoid error
-        new_active_status = validated_data.get('is_active', instance.is_active)
+        new_active_status = validated_data.get('is_active', current_active_status)
         instance.is_active = new_active_status
         instance.save()
         return instance
