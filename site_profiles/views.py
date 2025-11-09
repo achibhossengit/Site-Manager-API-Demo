@@ -135,7 +135,7 @@ class GetSiteTotalByDateView(APIView):
 
         # daily record sums:
         daily_qs = DailyRecord.objects.filter(site=site, date=today).select_related('employee')
-        snap_qs = DailyRecordSnapshot.objects.filter(date = datetime.today()).select_related('employee')
+        snap_qs = DailyRecordSnapshot.objects.filter(site=site, date = datetime.today()).select_related('employee')
 
         # total khoraki, advance and present from DailyRecordTable
         present_from_dailyRecord = daily_qs.aggregate(total=Coalesce(Sum('present'), Value(0.0, output_field=FloatField())))['total']
