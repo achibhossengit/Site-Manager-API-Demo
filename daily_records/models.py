@@ -18,8 +18,8 @@ PRESENT_CHOICES = [
 
 class DailyRecord(models.Model):
     
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
+    employee = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='daily_records')
+    site = models.ForeignKey(Site, on_delete=models.RESTRICT, related_name='daily_records')
     date = models.DateField()
     present = models.FloatField(choices=PRESENT_CHOICES, default=0)
     khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
@@ -28,10 +28,6 @@ class DailyRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
-
-    @property
-    def today_salary(self):
-        return get_salary_by_employee(self.employee, self.date)
     
     class Meta:
         constraints = [
