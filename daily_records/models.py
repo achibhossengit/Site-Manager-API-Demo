@@ -52,7 +52,7 @@ class WorkSession(models.Model):
     update_permission = models.BooleanField(default=False)
     
     total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
-    given_salary = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(5000)])
+    given_salary = models.FloatField(default=0, validators=[MaxValueValidator(5000), MinValueValidator(0)])
     khoraki = models.PositiveIntegerField(default=0)
     advance = models.PositiveIntegerField(default=0)
 

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='worksession',
             name='given_salary',
-            field=models.PositiveIntegerField(default=0, validators=[django.core.validators.MaxValueValidator(5000)]),
+            field=models.FloatField(default=0.0, validators=[django.core.validators.MaxValueValidator(5000), django.core.validators.MinValueValidator(0.0)]),
         ),
         migrations.AddField(
             model_name='worksession',
