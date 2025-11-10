@@ -44,7 +44,7 @@ class WorkSession(models.Model):
         on_delete=models.CASCADE,
         related_name='work_sessions'
     )
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='created_worksessions') # which site create it
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, related_name='created_worksessions') # which site create it
     start_date = models.DateField()  # first daily record date
     end_date = models.DateField()    # last daily record date
     created_at = models.DateTimeField(auto_now_add=True)
@@ -52,6 +52,10 @@ class WorkSession(models.Model):
     update_permission = models.BooleanField(default=False)
     
     total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    given_salary = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(5000)])
+    khoraki = models.PositiveIntegerField(default=0)
+    advance = models.PositiveIntegerField(default=0)
+
     last_session_payable = models.IntegerField(default=0)
     this_session_payable = models.IntegerField()
     pay_or_return = models.IntegerField(default=0) # payment during session creation time
