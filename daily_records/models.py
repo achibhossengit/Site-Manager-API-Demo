@@ -85,17 +85,18 @@ class WorkSession(models.Model):
         
 
 class SiteWorkRecord(models.Model):
-    work_session = models.ForeignKey(
-        WorkSession,
-        on_delete=models.CASCADE,
-        related_name='records'
-    )
+    work_session = models.ForeignKey(WorkSession, on_delete=models.SET_NULL,null=True, related_name='records')
     site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE, related_name='work_records')
-    work = models.FloatField()
+    present = models.FloatField(default=0)
+    # It should be positive integers, but some existing session_salary values are floats.
+    session_salary = models.FloatField(default=0, validators=[MinValueValidator(0)])
+
     total_salary = models.PositiveIntegerField()
-    khoraki_taken = models.PositiveIntegerField()
-    advance_taken = models.PositiveIntegerField()
     
+    khoraki = models.PositiveIntegerField(default=0)
+    advance = models.PositiveIntegerField(default=0)
+    pay_or_return = models.FloatField(default=0)
+
     @property
     def payable(self):
         return self.total_salary - (self.khoraki_taken + self.advance_taken)

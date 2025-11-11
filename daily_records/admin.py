@@ -16,7 +16,7 @@ class WorkSessionAdmin(admin.ModelAdmin):
 
 @admin.register(SiteWorkRecord)
 class SiteWorkRecordAdmin(admin.ModelAdmin):
-    list_display = ['work_session', 'site', 'work']
+    list_display = ['work_session', 'site', 'present']
     list_filter = ['site', 'work_session',]
 
 @admin.register(DailyRecordSnapshot)
