@@ -52,17 +52,33 @@ class WorkSession(models.Model):
     update_permission = models.BooleanField(default=False)
     
     present = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    # It should be positive integers, but some existing session_salary values are floats.
     session_salary = models.FloatField(default=0, validators=[MaxValueValidator(5000), MinValueValidator(0)])
     khoraki = models.PositiveIntegerField(default=0)
     advance = models.PositiveIntegerField(default=0)
 
-    last_session_payable = models.IntegerField(default=0)
-    this_session_payable = models.IntegerField()
-    pay_or_return = models.IntegerField(default=0) # payment during session creation time
+    last_session_payable = models.FloatField(default=0)
+    pay_or_return = models.FloatField(default=0) # payment during session creation
+    
+    @property
+    def earned_salary(self):
+        return self.present * self.session_salary
+
+    @property
+    def total_taken(self):
+        return self.khoraki + self.advance
+    
+    @property
+    def this_session_payable(self):
+        return self.earned_salary - self.total_taken
+
+    @property
+    def total_payable(self):
+        return self.last_session_payable + self.this_session_payable
     
     @property
     def rest_payable(self):
-        return (self.this_session_payable + self.last_session_payable) - self.pay_or_return
+        return self.total_payable - self.pay_or_return
 
     def __str__(self):
         return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_at}"
