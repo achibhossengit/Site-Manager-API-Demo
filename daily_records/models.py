@@ -89,20 +89,21 @@ class SiteWorkRecord(models.Model):
     site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE, related_name='work_records')
     present = models.FloatField(default=0)
     # It should be positive integers, but some existing session_salary values are floats.
-    session_salary = models.FloatField(default=0, validators=[MinValueValidator(0)])
-
-    total_salary = models.PositiveIntegerField()
-    
+    session_salary = models.FloatField(default=0, validators=[MinValueValidator(0)])    
     khoraki = models.PositiveIntegerField(default=0)
     advance = models.PositiveIntegerField(default=0)
     pay_or_return = models.FloatField(default=0)
+    
+    @property
+    def total_salary(self):
+        return self.present * self.session_salary
 
     @property
     def payable(self):
-        return self.total_salary - (self.khoraki_taken + self.advance_taken)
+        return self.total_salary - (self.khoraki + self.advance)
 
     def __str__(self):
-        return f"Site: {self.site} | Work: {self.work} days"
+        return f"Site: {self.site} | Work: {self.present} days"
     
     
 class DailyRecordSnapshot(models.Model):
