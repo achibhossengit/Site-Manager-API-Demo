@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='worksession',
-            name='given_salary',
+            name='session_salary',
             field=models.FloatField(default=0.0, validators=[django.core.validators.MaxValueValidator(5000), django.core.validators.MinValueValidator(0.0)]),
         ),
         migrations.AddField(
@@ -33,4 +33,9 @@ class Migration(migrations.Migration):
             name='site',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_worksessions', to='site_profiles.site'),
         ),
+        migrations.RenameField(
+            model_name='worksession',
+            old_name='total_work',
+            new_name='present',
+        )
     ]

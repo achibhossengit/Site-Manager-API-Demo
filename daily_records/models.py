@@ -51,8 +51,8 @@ class WorkSession(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     update_permission = models.BooleanField(default=False)
     
-    total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
-    given_salary = models.FloatField(default=0, validators=[MaxValueValidator(5000), MinValueValidator(0)])
+    present = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    session_salary = models.FloatField(default=0, validators=[MaxValueValidator(5000), MinValueValidator(0)])
     khoraki = models.PositiveIntegerField(default=0)
     advance = models.PositiveIntegerField(default=0)
 
