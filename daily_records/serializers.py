@@ -101,13 +101,13 @@ class SiteWorkRecordSerializer(ModelSerializer):
         model = SiteWorkRecord
         fields = [
             'site',
-            'work',
+            'present',
+            'session_salary',
             'total_salary',
-            'khoraki_taken',
-            'advance_taken',
+            'khoraki',
+            'advance',
             'payable'
         ]
-        
         read_only_fields = fields
         
 
@@ -123,15 +123,19 @@ class WorkSessionSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'update_permission',
-            'pay_or_return',
-            'last_session_payable',
+            'present',
+            'session_salary',
+            'earned_salary',
+            'khoraki',
+            'advance',
             'this_session_payable',
+            'last_session_payable',
+            'pay_or_return',
             'rest_payable',
             'created_at',
             'updated_at',
             'site_records',
         ]
-        
         read_only_fields = fields
 
 
