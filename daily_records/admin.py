@@ -10,9 +10,9 @@ class DailyRecordAdmin(admin.ModelAdmin):
 
 @admin.register(WorkSession)
 class WorkSessionAdmin(admin.ModelAdmin):
-    list_display = ['created_at', 'employee', 'site']
-    list_filter = ['created_at', 'end_date', 'site', 'employee'] 
-    ordering = ['-created_at']
+    list_display = ['created_date', 'employee', 'site']
+    list_filter = ['created_date', 'end_date', 'site', 'employee'] 
+    ordering = ['-created_date']
 
 @admin.register(SiteWorkRecord)
 class SiteWorkRecordAdmin(admin.ModelAdmin):

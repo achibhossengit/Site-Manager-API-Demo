@@ -47,9 +47,7 @@ class WorkSession(models.Model):
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, related_name='created_worksessions') # which site create it
     start_date = models.DateField()  # first daily record date
     end_date = models.DateField()    # last daily record date
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
+    created_date = models.DateField(auto_now_add=True)
     
     present = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
     # It should be positive integers, but some existing session_salary values are floats.
@@ -87,12 +85,22 @@ class WorkSession(models.Model):
 class SiteWorkRecord(models.Model):
     work_session = models.ForeignKey(WorkSession, on_delete=models.SET_NULL,null=True, related_name='records')
     site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE, related_name='work_records')
+    session_owner = models.BooleanField(default=False)
+    created_date = models.DateField(auto_now_add=True)
     present = models.FloatField(default=0)
     # It should be positive integers, but some existing session_salary values are floats.
     session_salary = models.FloatField(default=0, validators=[MinValueValidator(0)])    
     khoraki = models.PositiveIntegerField(default=0)
     advance = models.PositiveIntegerField(default=0)
     pay_or_return = models.FloatField(default=0)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(session_owner=True) | models.Q(pay_or_return=0),
+                name='check_pay_or_return'
+            )
+        ]
     
     @property
     def total_salary(self):
