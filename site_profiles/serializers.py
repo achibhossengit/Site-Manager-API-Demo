@@ -3,23 +3,13 @@ from rest_framework import serializers
 from site_profiles.models import Site, SiteCost, SiteCash, SiteBill
 from api.validators import validate_today_or_yesterday
 
-class SiteSerializer(ModelSerializer):
+class SiteSerializerList(ModelSerializer):
     class Meta:
         model = Site
-        fields = '__all__'
-        
-class SiteSerializerForViewer(ModelSerializer):
-    site_manager = serializers.SerializerMethodField()
-    total_site_bill = serializers.IntegerField(read_only=True)
-    total_site_cost = serializers.IntegerField(read_only=True)
-    total_other_cost = serializers.IntegerField(read_only=True)
-    total_rose_taken = serializers.FloatField(read_only=True)
-    actual_employee_cost = serializers.IntegerField(read_only=True)
-    profit = serializers.IntegerField(read_only=True)
-    total_site_cash = serializers.IntegerField(read_only=True)
-    taken_employee_cost = serializers.IntegerField(read_only=True)
-    site_balance = serializers.IntegerField(read_only=True)
+        fields = ['id', 'name', 'handover']
 
+class SiteSerializerDetails(ModelSerializer):
+    site_manager = serializers.SerializerMethodField()
     class Meta:
         model = Site
         fields = '__all__'
@@ -32,30 +22,8 @@ class SiteSerializerForViewer(ModelSerializer):
                 "first_name": result.first_name,
                 "last_name" : result.last_name
             }
-        return None
-        
-class SiteSerializerForManager(ModelSerializer):
-    site_manager = serializers.SerializerMethodField()
-    total_site_cost = serializers.IntegerField(read_only=True)
-    total_other_cost = serializers.IntegerField(read_only=True)
-    total_site_cash = serializers.IntegerField(read_only=True)
-    taken_employee_cost = serializers.IntegerField(read_only=True)
-    site_balance = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = Site
-        fields = '__all__'
-        
-    def get_site_manager(self, obj):
-        result = obj.employees.filter(user_type='site_manager').first()
-        if result:
-            return {
-                "id": result.id,
-                "first_name": result.first_name,
-                "last_name" : result.last_name
-            }
-        return None
-
+        return None        
+    
 # serializers for SiteCost model
 class SiteCostSerializer(ModelSerializer):
     class Meta:

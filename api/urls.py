@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
-from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, SiteInfoView, GetSiteTotalByDateView
+from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession, DailyRecordSnapshotViewset
 
 from rest_framework_simplejwt.views import (
@@ -14,7 +14,6 @@ from rest_framework_simplejwt.views import (
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='users')
 router.register('sites', SiteViewSet, basename='sites')
-router.register('sites-info', SiteInfoView, basename='sites-info')
 router.register('daily-records', DailyRecordViewSet, basename='daily-records')
 router.register('daily-records-snapshot', DailyRecordSnapshotViewset, basename='daily-records-snapshot')
 
@@ -33,8 +32,6 @@ urlpatterns = [
     path('', include(employee_router.urls)),
     path('', include(site_router.urls)),
     path('current-worksession/<int:emp_id>/', CurrentWorkSession.as_view(), name='current-work-session'),
-    path('site-total/<int:site_id>/', GetSiteTotalByDateView.as_view(), name='site-total'),
-
 
     path('token/create/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

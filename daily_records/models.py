@@ -116,7 +116,7 @@ class SiteWorkRecord(models.Model):
     
 class DailyRecordSnapshot(models.Model):
     """
-    Snapshot of DailyRecord BEFORE deletion — used for today's reporting when original DailyRecord is removed.
+    Snapshot of DailyRecord BEFORE deletion — used for today's and yesterday's reporting when original DailyRecord is removed.
     """
     site = models.ForeignKey(Site, related_name='daily_record_snapshots', on_delete=models.CASCADE)
     employee = models.ForeignKey(CustomUser, related_name='daily_record_snapshots', on_delete=models.CASCADE)
@@ -125,6 +125,7 @@ class DailyRecordSnapshot(models.Model):
     khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
     advance = models.PositiveIntegerField(default=0)
     comment = models.CharField(max_length=150, blank=True, null=True)
+    current_salary =  models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
