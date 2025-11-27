@@ -1,19 +1,17 @@
 from datetime import datetime
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from daily_records.models import DailyRecord, WorkSession, DailyRecordSnapshot
-from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionSerializer, WorkSessionPermissionUpdateSerializer, WorkSessionPayOrReturnFieldUpdateSerializer, DailyRecordSnapshotSerializer
-from daily_records.permissions import DailyRecordPermission, IsManagerUpdateOrConditionalReadonly, CurrentWorkSessionPermission
+from daily_records.serializers import DailyRecordAccessSerializer, DailyRecordCreateSerializer, DailyRecordUpdatePermissionSerializer, WorkSessionDetailsSerializer,  WorkSessionListSerializer,DailyRecordSnapshotSerializer
+from daily_records.permissions import DailyRecordPermission, WorkSessionAccessPermission, CurrentWorkSessionPermission
 from api.services.get_current_worksession import get_current_worksession
 from api.services.create_worksession import create_worksession
-from users.models import CustomUser
 
 class DailyRecordViewSet(ModelViewSet):    
     permission_classes = [IsAuthenticated, DailyRecordPermission]
@@ -57,40 +55,34 @@ class DailyRecordViewSet(ModelViewSet):
 
         return Response({"created": len(records)}, status=status.HTTP_201_CREATED)
     
-    
+
 class WorkSessionViewSet(ModelViewSet):
-    http_method_names = ['get', 'patch']
-    permission_classes = [IsAuthenticated, IsManagerUpdateOrConditionalReadonly]
-    
-    def get_serializer_class(self):
-        if(self.request.method == 'PATCH'):
-            if(self.request.user.user_type == 'site_manager'):
-                return WorkSessionPermissionUpdateSerializer
-            elif(self.request.user.user_type == 'main_manager'):
-                return WorkSessionPayOrReturnFieldUpdateSerializer
-        return WorkSessionSerializer
+    http_method_names = ['get']
+    permission_classes = [IsAuthenticated, WorkSessionAccessPermission]
+    filter_backends = [OrderingFilter]
+    ordering_fields = ['created_date']
+    ordering = ['created_date']
 
     def get_queryset(self):
-        user = self.request.user
-        employee_id = self.kwargs.get('user_pk')
-        if not employee_id:
-            return WorkSession.objects.none()
-        employee=get_object_or_404(CustomUser,id=employee_id)
-        
-        if user.user_type == 'employee' and user.id != employee.id:
-            raise PermissionDenied('Employee only can see his own worksessions.')
-        elif user.user_type == 'site_manager' and user.current_site != employee.current_site:
-            raise PermissionDenied('Site Manager only can see his his site employee worksessions.')
-        return WorkSession.objects.filter(employee = employee_id)
-        
+        emp_id = self.kwargs.get('user_pk')
+        if(self.action == 'list'):
+            return WorkSession.objects.filter(employee_id=emp_id)
+        return WorkSession.objects.filter(employee_id=emp_id).prefetch_related('records')
+    
+    def get_serializer_class(self):
+        if(self.action == 'list'):
+            return WorkSessionListSerializer
+        return WorkSessionDetailsSerializer
     
     @action(detail=False, methods=['get'], url_path='last_session')
     def last_session(self, request, *args, **kwargs):
-        last_session = self.get_queryset().order_by('end_date').last()
+        last_session = self.get_queryset().order_by('-end_date').first()
+        
+        if not last_session:
+            return Response({"detail": "No work sessions found."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = self.get_serializer(last_session)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
         
         
 class CurrentWorkSession(APIView):
@@ -108,6 +100,8 @@ class CurrentWorkSession(APIView):
 
         return Response(current_worksession)
 
+    # the main changes will happen here
+    # this is the main kalpit. do huge calculation by running create_worksession
     def post(self, request, *args, **kwargs):
         employee_id = self.kwargs['emp_id']
         pay_or_return = request.data.get('pay_or_return', 0)
