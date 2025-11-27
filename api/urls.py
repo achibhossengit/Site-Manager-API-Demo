@@ -1,4 +1,5 @@
 from django.urls import path, include
+from debug_toolbar.toolbar import debug_toolbar_urls
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
@@ -41,4 +42,4 @@ urlpatterns = [
     path('reset-password/', ResetPasswordView.as_view(), name='reset_password'),
     path('reset-password-confirm/<uidb64>/<token>/', ResetPasswordConfirmView.as_view(), name='reset-password-confirm'
     ),
-]
+] + debug_toolbar_urls()
