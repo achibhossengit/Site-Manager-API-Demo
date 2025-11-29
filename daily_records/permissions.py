@@ -42,42 +42,20 @@ class DailyRecordPermission(BasePermission):
     
         
 class CurrentWorkSessionPermission(BasePermission):
-    """
-    - GET: 
-        main_manager/viewer → any employee
-        site_manager        → only same-site employee
-        employee            → only own session
-    - POST:
-        site_manager        → only same-site employee
-    """
-
     def has_permission(self, request, view):
         user = request.user
         emp_id = view.kwargs.get('emp_id')
+        employee = get_object_or_404(CustomUser, id=emp_id)
         
-        try:
-            employee = CustomUser.objects.get(id=emp_id)
-        except CustomUser.DoesNotExist:
-            return False
-        
-        # GET logic
-        if request.method == 'GET':
-            if user.user_type in ['main_manager', 'viewer']:
-                return True
-
-            elif user.user_type == 'site_manager':
-                return user.current_site == employee.current_site
-
-            elif user.user_type == 'employee':
-                return user.id == employee.id
-
-            return False
-
-        # POST logic
-        elif request.method == 'POST':
-            return (request.user.user_type == 'site_manager' and request.user.current_site == employee.current_site)
-
+        # Role based access
+        if user.user_type in ['main_manager', 'viewer']:
+            return request.method in SAFE_METHODS
+        elif user.user_type == 'site_manager':
+            return user.current_site_id == employee.current_site_id
+        elif user.user_type == 'employee':
+            return request.method in SAFE_METHODS and user.id == employee.id
         return False
+    
         
 class WorkSessionAccessPermission(BasePermission):
     def has_permission(self, request, view):

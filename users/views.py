@@ -23,9 +23,9 @@ class CustomUserViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return CustomUser.objects.all()
-        elif user.user_type in ['viewer', 'main_manager']:
+        # if user.is_staff:
+            # return CustomUser.objects.all()
+        if user.user_type in ['viewer', 'main_manager']:
             return CustomUser.objects.filter(is_staff = False)
         elif user.user_type == 'site_manager':
             if(user.current_site is None):

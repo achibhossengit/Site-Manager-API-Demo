@@ -4,7 +4,6 @@ from users.models import CustomUser
 from site_profiles.models import Site
 from django.core.validators import MaxValueValidator
 from site_profiles.models import PERMISSION_CHOICES
-from api.services.get_salary_by_employee import get_salary_by_employee
 
 PRESENT_CHOICES = [
     (0, 'Absent'),
@@ -58,6 +57,11 @@ class WorkSession(models.Model):
     last_session_payable = models.FloatField(default=0)
     pay_or_return = models.FloatField(default=0) # payment during session creation
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['employee', 'created_date'], name='employee_created_date_unique')
+        ]
+    
     @property
     def earned_salary(self):
         return self.present * self.session_salary
@@ -79,7 +83,7 @@ class WorkSession(models.Model):
         return self.total_payable - self.pay_or_return
 
     def __str__(self):
-        return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_at}"
+        return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_date}"
         
 
 class SiteWorkRecord(models.Model):
@@ -96,6 +100,9 @@ class SiteWorkRecord(models.Model):
 
     class Meta:
         constraints = [
+            # prevent duplicate siteworkrecord creation against a single worksession
+            models.UniqueConstraint(fields=['work_session', 'site'], name='siteworkrecord_worksession_unique'),
+            # only session creator allow to set "pay_or_return"
             models.CheckConstraint(
                 check=models.Q(session_owner=True) | models.Q(pay_or_return=0),
                 name='check_pay_or_return'
