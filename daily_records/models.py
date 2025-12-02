@@ -4,7 +4,6 @@ from users.models import CustomUser
 from site_profiles.models import Site
 from django.core.validators import MaxValueValidator
 from site_profiles.models import PERMISSION_CHOICES
-from api.services.get_salary_by_employee import get_salary_by_employee
 
 PRESENT_CHOICES = [
     (0, 'Absent'),
@@ -18,8 +17,8 @@ PRESENT_CHOICES = [
 
 class DailyRecord(models.Model):
     
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_records')
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='daily_records')
+    employee = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='daily_records')
+    site = models.ForeignKey(Site, on_delete=models.RESTRICT, related_name='daily_records')
     date = models.DateField()
     present = models.FloatField(choices=PRESENT_CHOICES, default=0)
     khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
@@ -28,10 +27,6 @@ class DailyRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     permission_level = models.IntegerField(choices=PERMISSION_CHOICES, default=0)
-
-    @property
-    def today_salary(self):
-        return get_salary_by_employee(self.employee, self.date)
     
     class Meta:
         constraints = [
@@ -48,49 +43,87 @@ class WorkSession(models.Model):
         on_delete=models.CASCADE,
         related_name='work_sessions'
     )
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='created_worksessions') # which site create it
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, related_name='created_worksessions') # which site create it
     start_date = models.DateField()  # first daily record date
     end_date = models.DateField()    # last daily record date
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    update_permission = models.BooleanField(default=False)
+    created_date = models.DateField(auto_now_add=True)
     
-    total_work = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
-    last_session_payable = models.IntegerField(default=0)
-    this_session_payable = models.IntegerField()
-    pay_or_return = models.IntegerField(default=0) # payment during session creation time
+    present = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    # It should be positive integers, but some existing session_salary values are floats.
+    session_salary = models.FloatField(default=0, validators=[MaxValueValidator(5000), MinValueValidator(0)])
+    khoraki = models.PositiveIntegerField(default=0)
+    advance = models.PositiveIntegerField(default=0)
+
+    last_session_payable = models.FloatField(default=0)
+    pay_or_return = models.FloatField(default=0) # payment during session creation
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['employee', 'created_date'], name='employee_created_date_unique')
+        ]
+    
+    @property
+    def earned_salary(self):
+        return self.present * self.session_salary
+
+    @property
+    def total_taken(self):
+        return self.khoraki + self.advance
+    
+    @property
+    def this_session_payable(self):
+        return self.earned_salary - self.total_taken
+
+    @property
+    def total_payable(self):
+        return self.last_session_payable + self.this_session_payable
     
     @property
     def rest_payable(self):
-        return (self.this_session_payable + self.last_session_payable) - self.pay_or_return
+        return self.total_payable - self.pay_or_return
 
     def __str__(self):
-        return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_at}"
+        return f"{self.employee.first_name +" "+ self.employee.last_name}  | {self.created_date}"
         
 
 class SiteWorkRecord(models.Model):
-    work_session = models.ForeignKey(
-        WorkSession,
-        on_delete=models.CASCADE,
-        related_name='records'
-    )
+    work_session = models.ForeignKey(WorkSession, on_delete=models.SET_NULL,null=True, related_name='records')
     site = models.ForeignKey('site_profiles.Site', on_delete=models.CASCADE, related_name='work_records')
-    work = models.FloatField()
-    total_salary = models.PositiveIntegerField()
-    khoraki_taken = models.PositiveIntegerField()
-    advance_taken = models.PositiveIntegerField()
+    session_owner = models.BooleanField(default=False)
+    created_date = models.DateField(auto_now_add=True)
+    present = models.FloatField(default=0)
+    # It should be positive integers, but some existing session_salary values are floats.
+    session_salary = models.FloatField(default=0, validators=[MinValueValidator(0)])    
+    khoraki = models.PositiveIntegerField(default=0)
+    advance = models.PositiveIntegerField(default=0)
+    pay_or_return = models.FloatField(default=0)
+
+    class Meta:
+        constraints = [
+            # prevent duplicate siteworkrecord creation against a single worksession
+            models.UniqueConstraint(fields=['work_session', 'site'], name='siteworkrecord_worksession_unique'),
+            # only session creator allow to set "pay_or_return"
+            models.CheckConstraint(
+                check=models.Q(session_owner=True) | models.Q(pay_or_return=0),
+                name='check_pay_or_return'
+            )
+        ]
     
     @property
+    def total_salary(self):
+        return self.present * self.session_salary
+
+    @property
     def payable(self):
-        return self.total_salary - (self.khoraki_taken + self.advance_taken)
+        return self.total_salary - (self.khoraki + self.advance)
 
     def __str__(self):
-        return f"Site: {self.site} | Work: {self.work} days"
+        return f"Site: {self.site} | Work: {self.present} days"
     
     
 class DailyRecordSnapshot(models.Model):
     """
-    Snapshot of DailyRecord BEFORE deletion — used for today's reporting when original DailyRecord is removed.
+    Snapshot of DailyRecord BEFORE deletion — used for today's and yesterday's reporting when original DailyRecord is removed.
     """
     site = models.ForeignKey(Site, related_name='daily_record_snapshots', on_delete=models.CASCADE)
     employee = models.ForeignKey(CustomUser, related_name='daily_record_snapshots', on_delete=models.CASCADE)
@@ -99,6 +132,7 @@ class DailyRecordSnapshot(models.Model):
     khoraki = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(1000)])
     advance = models.PositiveIntegerField(default=0)
     comment = models.CharField(max_length=150, blank=True, null=True)
+    current_salary =  models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

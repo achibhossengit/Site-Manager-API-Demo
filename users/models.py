@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
     designation = models.CharField(max_length=20, choices=DESIGNATION_CHOICES, default= 'HELPER')
     address = models.TextField(max_length=200, blank=True, null=True)
     current_site = models.ForeignKey('site_profiles.Site', on_delete=models.SET_NULL, null=True, related_name='employees')    
+    current_salary = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(5000)])
 
     
     @property

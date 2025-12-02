@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from users.models import CustomUser
 
@@ -41,57 +42,36 @@ class DailyRecordPermission(BasePermission):
     
         
 class CurrentWorkSessionPermission(BasePermission):
-    """
-    - GET: 
-        main_manager/viewer → any employee
-        site_manager        → only same-site employee
-        employee            → only own session
-    - POST:
-        site_manager        → only same-site employee
-    """
-
     def has_permission(self, request, view):
         user = request.user
         emp_id = view.kwargs.get('emp_id')
+        employee = get_object_or_404(CustomUser, id=emp_id)
         
-        try:
-            employee = CustomUser.objects.get(id=emp_id)
-        except CustomUser.DoesNotExist:
-            return False
-        
-        # GET logic
-        if request.method == 'GET':
-            if user.user_type in ['main_manager', 'viewer']:
-                return True
-
-            elif user.user_type == 'site_manager':
-                return user.current_site == employee.current_site
-
-            elif user.user_type == 'employee':
-                return user.id == employee.id
-
-            return False
-
-        # POST logic
-        elif request.method == 'POST':
-            return (request.user.user_type == 'site_manager' and request.user.current_site == employee.current_site)
-
-        return False
-
-
-class IsManagerUpdateOrConditionalReadonly(BasePermission):
-    def has_permission(self, request, view):
-        return True
-    
-    def has_object_permission(self, request, view, obj):
-        if request.user.user_type == 'viewer':
+        # Role based access
+        if user.user_type in ['main_manager', 'viewer']:
             return request.method in SAFE_METHODS
-        elif request.user.user_type == 'main_manager':
-            # main manager can update pay_or_return field based on update permission
-            return obj.update_permission == True or request.method in SAFE_METHODS
-        elif request.user.user_type == 'site_manager':
-            # only created site manager can update only update permission filed this field
-            return request.user.current_site == obj.site
-        elif request.user.user_type == 'employee':
-            return request.method in SAFE_METHODS and request.user == obj.employee
-        else: return False
+        elif user.user_type == 'site_manager':
+            return user.current_site_id == employee.current_site_id
+        elif user.user_type == 'employee':
+            return request.method in SAFE_METHODS and user.id == employee.id
+        return False
+    
+        
+class WorkSessionAccessPermission(BasePermission):
+    def has_permission(self, request, view):
+        if(request.method not in SAFE_METHODS):
+            return False
+
+        user = request.user
+        emp_id = view.kwargs.get('user_pk')
+        employee = get_object_or_404(CustomUser, id=emp_id)
+        
+        # Check access levels
+        if user.user_type in ['main_manager', 'viewer']:
+            return True
+        if user.user_type == 'site_manager':
+            return user.current_site_id == employee.current_site_id
+        if user.user_type == 'employee':
+            return user.id == employee.id
+        
+        return False

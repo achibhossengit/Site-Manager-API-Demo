@@ -99,59 +99,41 @@ class DailyRecordUpdatePermissionSerializer(ModelSerializer):
 class SiteWorkRecordSerializer(ModelSerializer):
     class Meta:
         model = SiteWorkRecord
-        fields = [
-            'site',
-            'work',
-            'total_salary',
-            'khoraki_taken',
-            'advance_taken',
-            'payable'
-        ]
-        
-        read_only_fields = fields
-        
+        fields = "__all__"
 
-class WorkSessionSerializer(serializers.ModelSerializer):
+class WorkSessionBaseSerializer(serializers.ModelSerializer):
+    earned_salary = serializers.SerializerMethodField()
+    total_taken = serializers.SerializerMethodField()
+    this_session_payable = serializers.SerializerMethodField()
+    total_payable = serializers.SerializerMethodField()
+    rest_payable = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkSession
+        fields = "__all__"
+
+    def get_earned_salary(self, obj):
+        return obj.earned_salary
+
+    def get_total_taken(self, obj):
+        return obj.total_taken
+
+    def get_this_session_payable(self, obj):
+        return obj.this_session_payable
+
+    def get_total_payable(self, obj):
+        return obj.total_payable
+
+    def get_rest_payable(self, obj):
+        return obj.rest_payable
+
+class WorkSessionListSerializer(WorkSessionBaseSerializer):
+    pass
+
+class WorkSessionDetailsSerializer(WorkSessionBaseSerializer):
     site_records = SiteWorkRecordSerializer(source='records', many=True, read_only=True)
-    
-    class Meta:
-        model = WorkSession
-        fields = [
-            'id',
-            'site',
-            'employee',
-            'start_date',
-            'end_date',
-            'update_permission',
-            'pay_or_return',
-            'last_session_payable',
-            'this_session_payable',
-            'rest_payable',
-            'created_at',
-            'updated_at',
-            'site_records',
-        ]
-        
-        read_only_fields = fields
 
 
-class WorkSessionPermissionUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WorkSession
-        fields = ['update_permission']
-
-class WorkSessionPayOrReturnFieldUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WorkSession
-        fields = ['pay_or_return']
-    
-    def save(self, **kwargs):
-        instance = super().save(**kwargs)
-        instance.update_permission = False
-        instance.save(update_fields=['update_permission'])
-        return instance
-    
-    
 class DailyRecordSnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyRecordSnapshot
