@@ -45,14 +45,18 @@ class SiteProfileAccessPermissions(BasePermission):
             return True
         return request.method in SAFE_METHODS
     
-class SiteSummaryAccessPermission(BasePermission):
+class DateBasedSiteSummaryPermission(BasePermission):
     def has_permission(self, request, view):
-        # Site managers can only access their own site
         user = request.user
-        site_id = view.kwargs.get('pk')
+        site_id = view.kwargs.get('site_id')
 
         if not user.user_type in ['main_manager', 'site_manager', 'viewer']:
             return False
+        # Site managers can only access their own site
         if user.user_type == 'site_manager' and int(user.current_site_id) != int(site_id):
             return False
         return True
+
+class TotalSiteSummaryPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.user_type == 'viewer'

@@ -202,7 +202,9 @@ class CurrentWorkSession(APIView):
                 SiteWorkRecord.objects.bulk_create(site_work_records)
                 
                 # 7. Create DailyRecordSnapshot for today and yesterday
-                records_to_snapshot = daily_records.filter(date__in=[today, yesterday])
+                # records_to_snapshot = daily_records.filter(date__in=[today, yesterday])
+                # REMOVE IT after TESTING.
+                records_to_snapshot = daily_records
                 
                 snapshots = []
                 for record in records_to_snapshot:

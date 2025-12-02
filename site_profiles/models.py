@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from datetime import date
+from django.utils.timezone import localdate
 
 PERMISSION_CHOICES = [
     (0, 'No Permission'),
@@ -17,8 +17,7 @@ class Site(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=500)
     location = models.CharField(max_length=100)
-    # use default=timezone.localdate()
-    start_at = models.DateField(default=date.today)
+    start_at = models.DateField(default=localdate)
     handover = models.DateField(null=True, blank=True)
 
     def clean(self):
@@ -35,8 +34,7 @@ class Site(models.Model):
     
 class SiteCost(models.Model):
     site = models.ForeignKey(Site, related_name='site_costs', on_delete=models.CASCADE)
-    # use default=timezone.localdate()
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=localdate)
     title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     type = models.CharField(choices=COST_TYPE_CHOICES, default='st')
@@ -49,8 +47,7 @@ class SiteCost(models.Model):
 
 class SiteCash(models.Model):
     site = models.ForeignKey(Site, related_name='site_cashes', on_delete=models.CASCADE)
-    # use default=timezone.localdate()
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=localdate)
     title = models.CharField(max_length=50)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
@@ -64,8 +61,7 @@ class SiteCash(models.Model):
     
 class SiteBill(models.Model):
     site = models.ForeignKey(Site, related_name='site_bills', on_delete=models.CASCADE)
-    # use default=timezone.localdate()
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=localdate)
     title = models.CharField(max_length=200)
     amount = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)

@@ -6,7 +6,7 @@ from api.validators import validate_today_or_yesterday
 class SiteSerializerList(ModelSerializer):
     class Meta:
         model = Site
-        fields = ['id', 'name', 'handover']
+        fields = ['id', 'name', 'start_at','handover']
 
 class SiteSerializerDetails(ModelSerializer):
     site_manager = serializers.SerializerMethodField()

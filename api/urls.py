@@ -3,7 +3,7 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from users.views import CustomUserViewSet, PromotionViewSet, ChangePasswordView, ResetPasswordView, ResetPasswordConfirmView
-from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet
+from site_profiles.views import SiteViewSet, SiteCostViewSet, SiteCashViewSet, SiteBillViewSet, DateBasedSiteSummaryView, TotalSiteSummaryView
 from daily_records.views import DailyRecordViewSet, WorkSessionViewSet, CurrentWorkSession, DailyRecordSnapshotViewset
 
 from rest_framework_simplejwt.views import (
@@ -33,6 +33,10 @@ urlpatterns = [
     path('', include(employee_router.urls)),
     path('', include(site_router.urls)),
     path('current-worksession/<int:emp_id>/', CurrentWorkSession.as_view(), name='current-work-session'),
+
+    path('site-summary/<int:site_id>/<str:date>/', DateBasedSiteSummaryView.as_view()),
+    path('total-site-summary/<int:site_id>/', TotalSiteSummaryView.as_view()),
+
 
     path('token/create/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
