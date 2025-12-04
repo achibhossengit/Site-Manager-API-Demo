@@ -8,7 +8,7 @@ from django.utils.encoding import force_bytes
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,6 +18,7 @@ from users.serializers import PromotionSerializer, PromotionCreateSerializer,Pro
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
+    http_method_names=['get', 'post', 'patch']
     permission_classes = [IsAuthenticated, CustomUserPermission]
     filterset_fields = ['current_site', 'designation', 'is_active']
 
@@ -71,7 +72,7 @@ class CustomUserViewSet(ModelViewSet):
     
     
 class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def post(self, request):
         user = request.user
