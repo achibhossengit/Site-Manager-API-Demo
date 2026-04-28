@@ -58,7 +58,7 @@ class CustomUserViewSet(ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='me')
     def me(self, request):
-        serializer = CustomUserGetDetailSerializer(request.user)
+        serializer = CustomUserGetDetailSerializer(request.user, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='ids')
