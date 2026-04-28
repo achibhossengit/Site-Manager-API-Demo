@@ -18,7 +18,7 @@ from users.serializers import PromotionSerializer, PromotionCreateSerializer,Pro
 from users.permissions import PromotionPermission, CustomUserPermission
 
 class CustomUserViewSet(ModelViewSet):
-    http_method_names=['get', 'post', 'patch']
+    http_method_names=['get', 'post', 'patch', 'put']
     permission_classes = [IsAuthenticated, CustomUserPermission]
     filterset_fields = ['current_site', 'designation', 'is_active']
 
